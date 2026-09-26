@@ -1,0 +1,37 @@
+#!/sbin/sh
+# ==============================================================================
+# ButterOS Recovery Update-Binary for TWRP / OrangeFox
+# Target: Xiaomi Poco F1 (beryllium)
+# ==============================================================================
+OUTFD=$2
+ZIPFILE=$3
+
+ui_print() {
+    if [ -n "$OUTFD" ] && [ -e "/proc/self/fd/$OUTFD" ]; then
+        echo "ui_print $1" > "/proc/self/fd/$OUTFD"
+        echo "ui_print" > "/proc/self/fd/$OUTFD"
+    else
+        echo "$1"
+    fi
+}
+
+ui_print "****************************************"
+ui_print "*    ButterOS Recovery Installation    *"
+ui_print "*      Debian 13 Trixie for Poco F1    *"
+ui_print "****************************************"
+
+WORKDIR="/tmp/butteros_installer"
+rm -rf "${WORKDIR}"
+mkdir -p "${WORKDIR}"
+
+ui_print "Extracting installer payload..."
+unzip -o "$ZIPFILE" "install_butteros.sh" -d "${WORKDIR}" >/dev/null 2>&1 || true
+unzip -o "$ZIPFILE" "butteros-debian-rootfs.tar.gz" -d /tmp >/dev/null 2>&1 || true
+
+if [ -f "${WORKDIR}/install_butteros.sh" ]; then
+    chmod +x "${WORKDIR}/install_butteros.sh"
+    exec "${WORKDIR}/install_butteros.sh" "$1" "$2" "$3"
+else
+    ui_print "ERROR: install_butteros.sh not found in zip archive!"
+    exit 1
+fi

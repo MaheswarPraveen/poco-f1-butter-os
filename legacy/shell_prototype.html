@@ -1,0 +1,4847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Poco F1 ButterOS Shell</title>
+  <style>
+    :root {
+      --bg: #020203;
+      --phone-bezel: #080809;
+      --phone-border: #161412;
+      --screen-bg: #020203;
+      --rail-bg: rgba(8, 8, 10, 0.10);             /* 90% Smoked Glass Transparency */
+      --rail-border: rgba(222, 176, 86, 0.30);     /* 18k Matte Champagne Gold Hairline */
+      --accent: #deb056;                            /* Rich 18k Satin Brushed Gold */
+      --accent-active: #f8df9e;                     /* Luminous Champagne Gold Highlight */
+      --accent-glow: transparent;                   /* Zero Emissive Neon Bloom */
+      --gold-deep: #825e24;                         /* Deep Antique Burnished Bronze */
+      --gold-subtle: rgba(222, 176, 86, 0.08);     /* Subtle Champagne Luster Tint */
+      --gold-border: rgba(222, 176, 86, 0.32);     /* Chamfered Luxury Gold Rim */
+      --text: #fdfcf9;
+      --text-muted: #d4c2a5;                        /* Warm Champagne Oyster */
+      --text-dim: #948065;                          /* Burnished Matte Bronze */
+      --card-bg: rgba(12, 11, 10, 0.10);            /* 90% Translucent Smoked Glass */
+      --card-border: rgba(222, 176, 86, 0.28);
+      --card-border-subtle: rgba(222, 176, 86, 0.16);
+      --rail-width: 88px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    *::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      padding: 16px;
+    }
+
+    .viewport-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-bar {
+      text-align: center;
+      max-width: 440px;
+    }
+
+    .header-bar h1 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+    }
+
+    .header-bar p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Poco F1 Chassis (1080x2246 18.7:9 scale = 360 x 748 CSS px) */
+    .device-chassis {
+      position: relative;
+      width: 360px;
+      height: 748px;
+      background: var(--phone-bezel);
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow: 
+        0 25px 60px -15px rgba(0, 0, 0, 0.95),
+        0 0 0 1px var(--phone-border),
+        inset 0 0 0 1.5px rgba(255, 255, 255, 0.05);
+    }
+
+    .device-chassis::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 4px;
+      background: #181512;
+      border-radius: 2px;
+    }
+
+    /* Screen Viewport */
+    .screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: var(--screen-bg);
+      border-radius: 34px;
+      overflow: hidden;
+      touch-action: none;
+      isolation: isolate;
+      border: none;
+    }
+
+    /* Poco F1 Physical Hardware Notch (Desktop Reference Only - Zero UI/Text Over Notch) */
+    .waterdrop-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 188px; /* Authentic physical notch width */
+      height: 28px; /* Authentic physical notch depth */
+      background: #000000;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+      border: 0.5px solid rgba(222, 176, 86, 0.18);
+      border-top: none;
+    }
+
+    .notch-hardware {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .notch-ir-sensor {
+      position: absolute;
+      left: 30px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #09090b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .notch-earpiece {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 3px;
+      width: 44px;
+      height: 3px;
+      border-radius: 1.5px;
+      background: #141312;
+      border: 0.5px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .notch-camera {
+      position: absolute;
+      right: 30px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #040404;
+      border: 1.5px solid rgba(222, 176, 86, 0.22);
+      box-shadow: inset 0 0 2px rgba(40, 100, 240, 0.45);
+    }
+
+    /* Status Bar: Clean Dual Horns Flanking Physical Notch (Zero Pixels Over Notch) */
+    .status-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 28px;
+      z-index: 100;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    /* Left Horn (Ear): From x=0 to x=86px (Clip strictly at x=86px so wings emerge directly from notch wall) */
+    .status-horn-left {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 86px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      padding-left: 16px;
+      clip-path: inset(-20px 0px -20px -20px);
+    }
+
+    .status-time {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      letter-spacing: -0.01em;
+      transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+      will-change: transform, opacity;
+    }
+
+    /* Right Horn (Ear): From x=274px to x=360px (Clip strictly at x=274px so wings emerge directly from notch wall) */
+    .status-horn-right {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 86px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 16px;
+      clip-path: inset(-20px -20px -20px 0px);
+    }
+
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255, 255, 255, 0.85);
+      transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+      will-change: transform, opacity;
+    }
+
+    /* Dynamic Island Horn Wings: Flawless Physical Emergence & Retraction From Notch Seams */
+    .island-wing {
+      position: absolute;
+      top: 3px;
+      height: 22px;
+      background: rgba(16, 15, 13, 0.95);
+      backdrop-filter: blur(24px) saturate(140%);
+      -webkit-backdrop-filter: blur(24px) saturate(140%);
+      border: 0.5px solid rgba(222, 176, 86, 0.38);
+      border-radius: 11px;
+      box-shadow: 
+        inset 0 0.5px 0.5px rgba(255, 255, 255, 0.15),
+        0 4px 14px rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.20s ease;
+      z-index: 105;
+      cursor: pointer;
+      will-change: transform, opacity;
+    }
+
+    /* Left Wing Pod: Tucked inside notch seam when idle (translateX 78px), slides left into ear when active */
+    .island-wing-left {
+      left: 15px;
+      right: 4px;
+      padding: 0 5px;
+      gap: 4px;
+      transform: translateX(78px);
+    }
+
+    .island-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      background: rgba(222, 176, 86, 0.18);
+      border: 0.5px solid rgba(222, 176, 86, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      flex-shrink: 0;
+      transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+      transform: translateX(-6px);
+      opacity: 0.6;
+    }
+
+    .island-icon svg {
+      width: 9px;
+      height: 9px;
+      display: block;
+    }
+
+    .island-title {
+      font-size: 8.5px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: -0.01em;
+      max-width: 40px;
+      transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+      transform: translateX(-6px);
+      opacity: 0.6;
+    }
+
+    /* Right Wing Pod: Tucked inside notch seam when idle (translateX -78px), slides right into ear when active */
+    .island-wing-right {
+      left: 4px;
+      right: 15px;
+      padding: 0 5px;
+      justify-content: center;
+      transform: translateX(-78px);
+    }
+
+    .island-status-pill {
+      font-size: 8px;
+      font-weight: 800;
+      color: #f8df9e;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-align: center;
+      max-width: 58px;
+      transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+      transform: translateX(6px);
+      opacity: 0.6;
+    }
+
+    /* Active State: Clock/Battery pushed to screen edges, Pods slide smoothly out of notch */
+    .screen.island-active .status-time {
+      opacity: 0;
+      transform: translateX(-32px);
+      pointer-events: none;
+    }
+
+    .screen.island-active .status-right {
+      opacity: 0;
+      transform: translateX(32px);
+      pointer-events: none;
+    }
+
+    .screen.island-active .island-wing-left {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .screen.island-active .island-wing-left .island-icon,
+    .screen.island-active .island-wing-left .island-title {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .screen.island-active .island-wing-right {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .screen.island-active .island-wing-right .island-status-pill {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    /* Mobile Responsive Edge-to-Edge on Physical Poco F1 */
+    @media (max-width: 600px) {
+      body {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #000000 !important;
+        min-height: 100vh !important;
+        justify-content: flex-start !important;
+      }
+      .header-bar, .control-deck {
+        display: none !important;
+      }
+      .viewport-wrapper {
+        gap: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+      }
+      .device-chassis {
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+      }
+      .device-chassis::before {
+        display: none !important;
+      }
+      .screen {
+        border-radius: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+      /* On real physical device, hide simulated notch so real physical notch sits naturally between wings */
+      .waterdrop-notch {
+        display: none !important;
+      }
+    }
+
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    /* Luxury Obsidian & Titanium Gold Ambient Canvas */
+    .home-canvas {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 72px;
+      background: 
+        radial-gradient(ellipse at 50% 16%, rgba(222, 176, 86, 0.04), transparent 60%),
+        radial-gradient(circle at 50% 80%, rgba(222, 176, 86, 0.02), transparent 50%),
+        var(--screen-bg);
+      transition: filter 0.32s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.32s ease;
+      pointer-events: none;
+    }
+
+    .home-canvas.dimmed {
+      filter: blur(16px) brightness(0.25);
+      opacity: 0.35;
+    }
+
+    .clock-display {
+      font-size: 64px;
+      font-weight: 200;
+      letter-spacing: -0.045em;
+      background: linear-gradient(180deg, #f5f4f2 30%, #ded7cc 70%, #deb056 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.95));
+    }
+
+    .date-display {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-top: 4px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 2;
+      opacity: 0.9;
+    }
+
+    .system-chip {
+      margin-top: 18px;
+      padding: 5px 14px;
+      background: linear-gradient(135deg, rgba(222, 176, 86, 0.08) 0%, rgba(10, 10, 12, 0.75) 100%);
+      border: 0.5px solid rgba(222, 176, 86, 0.22);
+      border-radius: 20px;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--accent-active);
+      position: relative;
+      z-index: 2;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 
+        inset 0 0.5px 0.5px rgba(255, 255, 255, 0.12),
+        0 6px 18px rgba(0, 0, 0, 0.8);
+    }
+
+    .gesture-hint-card {
+      position: absolute;
+      bottom: 164px;
+      width: 276px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 14px;
+      background: rgba(10, 10, 12, 0.40);
+      backdrop-filter: blur(28px) saturate(130%);
+      -webkit-backdrop-filter: blur(28px) saturate(130%);
+      border: 0.5px solid rgba(222, 176, 86, 0.16);
+      border-radius: 16px;
+      z-index: 5;
+      box-shadow: 
+        inset 0 0.5px 0.5px rgba(255, 255, 255, 0.08),
+        0 10px 30px rgba(0, 0, 0, 0.7);
+      transition: all 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .home-canvas.dimmed .gesture-hint-card {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateY(-8px) scale(0.95);
+    }
+
+    .gesture-hint-card .primary-hint {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: 0.02em;
+    }
+
+    .gesture-hint-card .sub-hint {
+      font-size: 9px;
+      color: var(--text-muted);
+    }
+
+    /* ButterOS Unified Search & Browser Bar */
+    .home-browser-tab {
+      position: absolute;
+      bottom: 110px;
+      width: 276px;
+      height: 42px;
+      background: linear-gradient(135deg, rgba(18, 17, 16, 0.20) 0%, rgba(8, 8, 10, 0.12) 100%);
+      border: 0.5px solid rgba(222, 176, 86, 0.20);
+      border-radius: 21px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 10px;
+      backdrop-filter: blur(36px) saturate(130%);
+      -webkit-backdrop-filter: blur(36px) saturate(130%);
+      cursor: pointer;
+      pointer-events: auto;
+      z-index: 10;
+      transition: all 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+      box-shadow: 
+        inset 0 0.5px 0.5px 0 rgba(255, 255, 255, 0.10),
+        0 10px 28px rgba(0, 0, 0, 0.75);
+    }
+
+    .home-browser-tab:hover {
+      background: linear-gradient(135deg, rgba(28, 26, 23, 0.40) 0%, rgba(14, 13, 12, 0.30) 100%);
+      border-color: rgba(222, 176, 86, 0.45);
+      box-shadow: 
+        inset 0 0.5px 0.5px 0 rgba(255, 255, 255, 0.15),
+        0 8px 24px rgba(0, 0, 0, 0.85);
+      transform: translateY(-1px);
+    }
+
+    .home-browser-tab:active {
+      transform: scale(0.97);
+    }
+
+    .browser-tab-icon svg {
+      width: 17px;
+      height: 17px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 1.8;
+      display: block;
+    }
+
+    .browser-tab-text {
+      flex: 1;
+      font-size: 11.5px;
+      color: rgba(245, 244, 242, 0.75);
+      font-weight: 400;
+      letter-spacing: 0.01em;
+    }
+
+    .browser-tab-action svg {
+      width: 15px;
+      height: 15px;
+      stroke: var(--text-muted);
+      fill: none;
+      stroke-width: 2;
+      display: block;
+    }
+
+    /* ButterOS Luxury Quick Dock */
+    .home-permanent-dock {
+      position: absolute;
+      bottom: 22px;
+      left: 16px;
+      right: 16px;
+      height: 78px;
+      background: linear-gradient(180deg, rgba(14, 13, 12, 0.14) 0%, rgba(8, 8, 10, 0.10) 100%);
+      backdrop-filter: blur(40px) saturate(130%);
+      -webkit-backdrop-filter: blur(40px) saturate(130%);
+      border: 0.5px solid rgba(222, 176, 86, 0.20);
+      border-radius: 36px;
+      box-shadow: 
+        inset 0 0.5px 0.5px 0 rgba(255, 255, 255, 0.12),
+        0 16px 45px rgba(0, 0, 0, 0.90);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 12px;
+      pointer-events: auto;
+      z-index: 10;
+      transition: all 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .dock-app-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: transform 0.16s cubic-bezier(0.32, 0.72, 0, 1);
+      gap: 0;
+    }
+
+    .dock-app-slot:active {
+      transform: scale(0.9);
+    }
+
+        .dock-icon-glyph {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.18s cubic-bezier(0.32, 0.72, 0, 1), color 0.18s ease;
+      color: var(--accent);
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .dock-app-slot:hover .dock-icon-glyph {
+      transform: translateY(-2px) scale(1.15);
+      color: var(--accent-active);
+    }
+
+    .dock-icon-glyph svg {
+      width: 26px;
+      height: 26px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: block;
+    }
+
+    .dock-icon-label {
+      display: none;
+    }
+
+    /* Vanish all when rails or drawer are activated */
+    .home-canvas.dimmed .home-browser-tab {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateY(-12px) scale(0.95);
+    }
+
+    .home-canvas.dimmed .home-permanent-dock {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateY(20px) scale(0.95);
+    }
+
+    .home-canvas.dimmed .gesture-hint-card {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: scale(0.95);
+    }
+
+    /* Loop Crossover Bridge Track (Top and Bottom subtle track) */
+    .loop-crossover-bridge {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(222, 176, 86, 0.20) 0%, transparent 25%, transparent 75%, rgba(222, 176, 86, 0.20) 100%);
+      pointer-events: none;
+      z-index: 59;
+    }
+    .loop-bridge-top { top: 0; }
+    .loop-bridge-bottom { bottom: 0; }
+
+    /* Arc Close Pill removed per user instruction - clean radial layout with swipe-back */
+
+    /* ====================================================
+       STRAIGHT DUAL RAILS (90% Transparency Frosted Glass & Matte Titanium)
+       ==================================================== */
+    .icon-rail {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: var(--rail-width);
+      background: var(--rail-bg);
+      backdrop-filter: blur(36px) saturate(130%);
+      -webkit-backdrop-filter: blur(36px) saturate(130%);
+      z-index: 60;
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-radius 0.35s ease,
+                  background 0.35s ease;
+      will-change: transform, width, top, bottom;
+    }
+
+    .icon-rail:active {
+      cursor: grabbing;
+    }
+
+    .rail-left {
+      left: 0;
+      border-right: 0.5px solid var(--rail-border);
+    }
+
+    .rail-right {
+      right: 0;
+      border-left: 0.5px solid var(--rail-border);
+    }
+
+    /* Retracted state */
+    .icon-rail.retracted {
+      transform: translateX(-100%);
+    }
+
+    .rail-right.retracted {
+      transform: translateX(100%);
+    }
+
+    /* Converted App Drawer State:
+       Dual rails slide inward from the bezels and JOIN TOGETHER at the center
+       into a single, 100% seamless, 90% transparent glassmorphic App Drawer card */
+    .screen.drawer-mode .icon-rail {
+      backdrop-filter: blur(40px) saturate(130%) !important;
+      -webkit-backdrop-filter: blur(40px) saturate(130%) !important;
+    }
+
+    .screen.drawer-mode .rail-left {
+      left: 12px;
+      right: auto;
+      width: calc(50% - 12px + 1px);
+      top: 36px;
+      bottom: 36px;
+      border-radius: 24px 0 0 24px;
+      border: none !important;
+      background: rgba(8, 8, 10, 0.12);
+      clip-path: inset(-60px 0 -60px -60px);
+      box-shadow: -14px 18px 48px rgba(0, 0, 0, 0.85);
+      cursor: default;
+      z-index: 61;
+      animation: drawerSpringInLeft 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .screen.drawer-mode .rail-right {
+      left: 50%;
+      right: auto;
+      width: calc(50% - 12px);
+      top: 36px;
+      bottom: 36px;
+      border-radius: 0 24px 24px 0;
+      border: none !important;
+      background: rgba(8, 8, 10, 0.12);
+      clip-path: inset(-60px -60px -60px 0);
+      box-shadow: 14px 18px 48px rgba(0, 0, 0, 0.85);
+      cursor: default;
+      z-index: 60;
+      animation: drawerSpringInRight 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .screen.drawer-mode .loop-crossover-bridge {
+      opacity: 0;
+    }
+
+    /* Scrollbar on right completely removed per user instruction */
+    .drawer-scroll-indicator {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    .screen.drawer-mode .drawer-scroll-indicator {
+      display: none !important;
+      opacity: 0 !important;
+    }
+
+    /* Top Pull-Down Handle on Full App Drawer (Matte Brushed Titanium Bar) */
+    .drawer-top-handle {
+      position: absolute;
+      top: 45px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 44px;
+      height: 4.5px;
+      border-radius: 4px;
+      background: #deb056;
+      box-shadow: none;
+      z-index: 75;
+      opacity: 0;
+      pointer-events: none;
+      cursor: grab;
+      touch-action: none;
+      transition: opacity 0.25s ease, background 0.18s ease, width 0.18s ease;
+    }
+
+    .drawer-top-handle::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      bottom: -16px;
+      left: -20px;
+      right: -20px;
+    }
+
+    .screen.drawer-mode .drawer-top-handle {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer-top-handle:hover {
+      background: #f8df9e;
+      width: 56px;
+      box-shadow: none;
+    }
+
+    .drawer-top-handle:active {
+      cursor: grabbing;
+      background: #f5f4f2;
+      width: 60px;
+      box-shadow: none;
+    }
+
+    /* Conveyor Tracks */
+    .rail-conveyor-track {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+        .app-icon-slot {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 60px;
+      height: 68px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      transition: opacity 0.22s ease, transform 0.14s ease;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .app-icon-slot:hover, .app-icon-slot:active {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .screen.drawer-mode .app-icon-slot {
+      width: 58px;
+      height: 72px;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .screen.drawer-mode .app-icon-slot:hover {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+            .app-icon-glyph {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      transition: transform 0.18s ease, color 0.18s ease;
+    }
+
+    .app-icon-slot:hover .app-icon-glyph {
+      color: var(--accent-active);
+      transform: scale(1.15);
+    }
+
+    .app-icon-glyph svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: block;
+    }
+
+    .app-icon-label {
+      font-size: 9.5px;
+      font-weight: 500;
+      color: #a89f91;
+      margin-top: 3px;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 52px;
+      text-align: center;
+      transition: color 0.18s ease;
+    }
+
+    .app-icon-slot:hover .app-icon-label {
+      color: #ded7cc;
+    }
+
+    /* Edge Guides: 100% Invisible Hitbox (No visible stick on phone edges) */
+    .edge-swipe-guide {
+      position: absolute;
+      top: 20%;
+      bottom: 20%;
+      width: 36px;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      opacity: 0 !important;
+      z-index: 55;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .edge-guide-left { left: 0; }
+    .edge-guide-right { right: 0; }
+
+    /* Corner Notification Hover Guides ("Hover thing" flush with curved bezel corners) */
+    .corner-hover-indicator {
+      position: absolute;
+      bottom: 0;
+      width: 48px;
+      height: 48px;
+      z-index: 82;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    }
+
+    .corner-indicator-left {
+      left: 0;
+    }
+
+    .corner-indicator-right {
+      right: 0;
+    }
+
+    .corner-indicator-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .corner-hover-indicator:hover,
+    .corner-hover-indicator:active {
+      transform: scale(1.12);
+    }
+
+    .corner-hover-indicator path {
+      stroke: rgba(222, 176, 86, 0.45) !important;
+    }
+
+    .corner-hover-indicator:hover path,
+    .corner-hover-indicator:active path {
+      stroke: #f8df9e !important;
+      stroke-width: 3.5;
+      filter: none;
+    }
+
+    /* ====================================================
+       RADIAL QUICK SETTINGS CONSOLE (90% Transparency Glass & Matte Titanium)
+       ==================================================== */
+    .corner-hitbox {
+      position: absolute;
+      bottom: 0;
+      width: 80px;
+      height: 80px;
+      z-index: 80;
+      cursor: pointer;
+    }
+
+    .corner-hitbox-left { left: 0; }
+    .corner-hitbox-right { right: 0; }
+
+    .corner-beacon {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(222, 176, 86, 0.20) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .beacon-left { bottom: 8px; left: 8px; }
+    .beacon-right { bottom: 8px; right: 8px; }
+
+    .quarter-circle-arc {
+      position: absolute;
+      bottom: 0;
+      width: 330px;
+      height: 330px;
+      background: radial-gradient(circle at bottom left, rgba(12, 11, 10, 0.10) 0%, rgba(6, 6, 8, 0.10) 95%);
+      backdrop-filter: blur(40px) saturate(130%);
+      -webkit-backdrop-filter: blur(40px) saturate(130%);
+      z-index: 90;
+      opacity: 0;
+      pointer-events: none;
+      touch-action: none;
+      cursor: grab;
+      border-top-right-radius: 330px;
+      border-top: 0.5px solid rgba(222, 176, 86, 0.22);
+      border-right: 0.5px solid rgba(222, 176, 86, 0.22);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.95);
+      transform-origin: bottom left;
+      transform: scale(0);
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+    }
+
+    .quarter-circle-left {
+      left: 0;
+      transform-origin: bottom left;
+    }
+
+    .quarter-circle-right {
+      right: 0;
+      left: auto;
+      border-top-right-radius: 0;
+      border-top-left-radius: 330px;
+      border-right: none;
+      border-top: 0.5px solid rgba(222, 176, 86, 0.22);
+      border-left: 0.5px solid rgba(222, 176, 86, 0.22);
+      background: radial-gradient(circle at bottom right, rgba(12, 11, 10, 0.10) 0%, rgba(6, 6, 8, 0.10) 95%);
+      transform-origin: bottom right;
+    }
+
+    .quarter-circle-arc.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    .radial-grid-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      overflow: visible;
+    }
+
+
+    /* ====================================================
+       BORDERLESS 3D SPATIAL NOTIFICATION DECK (Opposite-Flank HUD)
+       ==================================================== */
+    /* ====================================================
+       BORDERLESS 3D SPATIAL NOTIFICATION DECK (Panoramic Edge-to-Edge HUD)
+       ==================================================== */
+    .spatial-notif-deck {
+      position: absolute;
+      top: 238px;
+      left: 14px;
+      right: 14px;
+      width: calc(100% - 28px);
+      height: 130px;
+      perspective: 900px;
+      perspective-origin: 50% 85%;
+      z-index: 88;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-16px) scale(0.96);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-style: preserve-3d;
+      will-change: transform, opacity;
+      touch-action: none !important;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .spatial-notif-deck.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .spatial-deck-track {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none !important;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Borderless 3D Rolodex Glass Card */
+    .spatial-card {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      padding: 12px 16px 12px 16px;
+      border-radius: 18px;
+      border: none !important;
+      outline: none !important;
+      background: rgba(14, 12, 10, 0.88);
+      backdrop-filter: blur(40px) saturate(130%);
+      -webkit-backdrop-filter: blur(40px) saturate(130%);
+      box-shadow: 
+        inset 0 1px 1px rgba(248, 223, 158, 0.18),
+        inset 0 0 24px rgba(0, 0, 0, 0.65),
+        0 16px 42px rgba(0, 0, 0, 0.92);
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none !important;
+      transform-style: preserve-3d;
+      transform-origin: 50% 90%;
+      transition: transform 0.48s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.48s ease,
+                  background 0.2s ease;
+      will-change: transform, opacity;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .spatial-card:active {
+      cursor: grabbing;
+    }
+
+    .spatial-card:hover {
+      background: rgba(22, 19, 16, 0.92);
+    }
+
+    .spatial-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .spatial-card-app {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .spatial-card-app-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .spatial-card-app-icon svg {
+      width: 15px;
+      height: 15px;
+      stroke: var(--accent);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .spatial-card-app-name {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .spatial-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spatial-card-time {
+      font-size: 9.5px;
+      color: #d4c2a5;
+      font-weight: 500;
+    }
+
+    .spatial-card-dismiss-btn {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: none !important;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-dim);
+      font-size: 10px;
+      line-height: 18px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+    }
+
+    .spatial-card-dismiss-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+    }
+
+    .spatial-card-dismiss-btn:active {
+      transform: scale(0.88);
+    }
+
+    .spatial-card-content {
+      margin: 4px 0 6px 0;
+    }
+
+    .spatial-card-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--accent-active);
+      margin-bottom: 2px;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .spatial-card-body {
+      font-size: 10.5px;
+      line-height: 1.35;
+      color: var(--text-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .spatial-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .spatial-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spatial-card-chip {
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: none !important;
+      background: rgba(222, 176, 86, 0.18);
+      color: var(--accent-active);
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.12s ease;
+      letter-spacing: 0.02em;
+    }
+
+    .spatial-card-chip:hover {
+      background: rgba(222, 176, 86, 0.32);
+      color: #ffffff;
+    }
+
+    .spatial-card-chip:active {
+      transform: scale(0.92);
+    }
+
+    /* Small Minimal Luxury Pagination Dots / Overflow Line */
+    .spatial-deck-indicators {
+      position: absolute;
+      top: calc(100% + 7px);
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      pointer-events: auto;
+      z-index: 92;
+    }
+
+    .spatial-indicator-item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 4px;
+      background: transparent;
+      border: none;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .spatial-indicator-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: rgba(222, 176, 86, 0.28);
+      transition: background 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .spatial-indicator-item.is-active .spatial-indicator-dot {
+      background: #deb056;
+      transform: scale(1.35);
+    }
+
+    .spatial-indicator-line {
+      width: 14px;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(222, 176, 86, 0.28);
+      transition: background 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .spatial-indicator-item.is-active .spatial-indicator-line {
+      background: #deb056;
+      transform: scale(1.15);
+    }
+
+
+    /* ====================================================
+       LUXURY HOROLOGY POLAR SECTOR TILE STYLING
+       ==================================================== */
+    .polar-tile-block {
+      cursor: pointer;
+      transform-box: fill-box;
+      transform-origin: center center;
+      transition: filter 0.2s ease, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .polar-tile-block:hover {
+      filter: brightness(1.18);
+    }
+
+    .polar-tile-block:active {
+      transform: scale(0.94);
+    }
+
+    .tile-sector-path {
+      fill: rgba(18, 15, 12, 0.78);
+      stroke: rgba(222, 176, 86, 0.22);
+      stroke-width: 0.95;
+      transition: fill 0.25s ease, stroke 0.25s ease;
+    }
+
+    .quarter-circle-left .polar-tile-block.is-active .tile-sector-path {
+      fill: url(#gradTileActive_l) !important;
+      stroke: url(#gradRimActive_l) !important;
+      stroke-width: 1.35;
+      filter: none;
+    }
+
+    .quarter-circle-right .polar-tile-block.is-active .tile-sector-path {
+      fill: url(#gradTileActive_r) !important;
+      stroke: url(#gradRimActive_r) !important;
+      stroke-width: 1.35;
+      filter: none;
+    }
+
+    .quarter-circle-left .polar-tile-block:not(.is-active) .tile-sector-path {
+      fill: url(#gradTileIdle_l) !important;
+      stroke: url(#gradRimIdle_l) !important;
+      filter: none;
+    }
+
+    .quarter-circle-right .polar-tile-block:not(.is-active) .tile-sector-path {
+      fill: url(#gradTileIdle_r) !important;
+      stroke: url(#gradRimIdle_r) !important;
+      filter: none;
+    }
+
+    .polar-tile-block:hover .tile-sector-path {
+      stroke: rgba(248, 223, 158, 0.55);
+    }
+
+    .tile-glyph {
+      stroke: #ffffff;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke 0.2s;
+      pointer-events: none;
+      filter: none;
+    }
+
+    .tile-glyph svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+      pointer-events: none;
+      stroke: inherit;
+      fill: inherit;
+      filter: none;
+    }
+
+    .polar-tile-block:not(.is-active) .tile-glyph,
+    .polar-tile-block:not(.is-active) .tile-glyph svg {
+      stroke: rgba(222, 176, 86, 0.45);
+      filter: none;
+    }
+
+    .polar-tile-block.is-active .tile-glyph,
+    .polar-tile-block.is-active .tile-glyph svg {
+      stroke: #ffffff;
+      filter: none;
+    }
+
+    .tile-label {
+      font-size: 8.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      fill: #fdf8ea;
+      text-anchor: middle;
+      pointer-events: none;
+      transition: fill 0.2s;
+    }
+
+    .polar-tile-block:not(.is-active) .tile-label {
+      fill: #8e8578;
+      font-weight: 600;
+    }
+
+    .tile-status {
+      font-size: 7.5px;
+      font-weight: 600;
+      fill: #deb056;
+      text-anchor: middle;
+      pointer-events: none;
+      letter-spacing: 0.02em;
+      transition: fill 0.2s;
+    }
+
+    .polar-tile-block:not(.is-active) .tile-status {
+      fill: rgba(160, 150, 138, 0.50);
+    }
+
+    .tile-active-led {
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .polar-tile-block:not(.is-active) .tile-active-led {
+      opacity: 0;
+    }
+
+    .polar-tile-block.is-active .tile-active-led {
+      opacity: 1;
+    }
+
+    /* Completely Round & Neat Corner NOTIF Button (Anti-slop / Apple HIG) */
+    .corner-round-notif-btn {
+      cursor: pointer;
+      transform-box: fill-box;
+      transform-origin: center center;
+      transition: transform 0.22s cubic-bezier(0.32, 0.72, 0, 1), filter 0.2s ease;
+    }
+
+    .corner-round-notif-btn:hover {
+      filter: brightness(1.15);
+    }
+
+    .corner-round-notif-btn:active {
+      transform: scale(0.88);
+      filter: brightness(0.95);
+    }
+
+    /* ====================================================
+       APPLE IOS NOTIFICATION CENTER (Full Screen / Liquid Glass)
+       ==================================================== */
+    .notif-modal.notif-dropdown {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      max-height: none;
+      background: rgba(8, 8, 10, 0.10);
+      backdrop-filter: blur(40px) saturate(130%);
+      -webkit-backdrop-filter: blur(40px) saturate(130%);
+      border-radius: 34px;
+      border: 0.5px solid rgba(222, 176, 86, 0.20);
+      box-shadow: 
+        inset 0 0.5px 0.5px 0 rgba(255, 255, 255, 0.12),
+        0 24px 60px rgba(0, 0, 0, 0.95);
+      z-index: 98;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-100%);
+      transition: transform 0.36s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.24s ease;
+      overflow: hidden;
+    }
+
+    .notif-modal.notif-dropdown.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .notif-top-safe-area {
+      height: 38px;
+      flex-shrink: 0;
+    }
+
+    /* Notification Center Header */
+    .notif-dropdown-header {
+      padding: 10px 18px 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 0.5px solid rgba(222, 176, 86, 0.16);
+      flex-shrink: 0;
+    }
+
+    .notif-header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #f5f4f2;
+      letter-spacing: -0.015em;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .notif-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .notif-badge {
+      background: rgba(222, 176, 86, 0.16);
+      border: 0.5px solid rgba(222, 176, 86, 0.30);
+      color: #f8df9e;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+    }
+
+    .btn-clear-all {
+      background: rgba(222, 176, 86, 0.10);
+      border: 0.5px solid rgba(222, 176, 86, 0.25);
+      color: #f8df9e;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 12px;
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      transition: background 0.15s ease, color 0.15s ease, transform 0.12s cubic-bezier(0.32, 0.72, 0, 1), border-color 0.15s ease;
+    }
+
+    .btn-clear-all:hover {
+      background: rgba(222, 176, 86, 0.22);
+      border-color: rgba(222, 176, 86, 0.45);
+      color: #f5f4f2;
+    }
+
+    .btn-clear-all:active {
+      transform: scale(0.94);
+    }
+
+    .notif-close-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(222, 176, 86, 0.10);
+      border: 0.5px solid rgba(222, 176, 86, 0.25);
+      color: #f8df9e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.12s cubic-bezier(0.32, 0.72, 0, 1), border-color 0.15s ease;
+    }
+
+    .notif-close-btn:hover {
+      background: rgba(222, 176, 86, 0.22);
+      border-color: rgba(222, 176, 86, 0.45);
+      color: #f5f4f2;
+    }
+
+    .notif-close-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* iOS Notification List (Full Height, No Scrollbar) */
+    .notif-list {
+      padding: 12px 14px 16px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    .notif-list::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    /* iOS Notification Banner (Liquid Glass) */
+    .notif-card {
+      background: rgba(18, 17, 16, 0.50);
+      backdrop-filter: blur(30px) saturate(130%);
+      -webkit-backdrop-filter: blur(30px) saturate(130%);
+      border: 0.5px solid rgba(222, 176, 86, 0.16);
+      border-radius: 18px;
+      box-shadow: 
+        inset 0 0.5px 0.5px 0 rgba(255, 255, 255, 0.10),
+        0 4px 14px rgba(0, 0, 0, 0.6);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      touch-action: pan-y;
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.24s ease, max-height 0.28s ease, margin 0.28s ease, padding 0.28s ease;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .notif-card:active {
+      cursor: grabbing;
+    }
+
+    .notif-card.is-dismissing {
+      transform: translateX(110%) !important;
+      opacity: 0 !important;
+      max-height: 0 !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+      overflow: hidden;
+      border-width: 0 !important;
+    }
+
+    .notif-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 10px;
+      color: rgba(235, 235, 245, 0.6);
+      gap: 8px;
+    }
+
+    .empty-icon {
+      font-size: 28px;
+      color: rgba(235, 235, 245, 0.8);
+    }
+
+    .empty-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #f5f4f2;
+      letter-spacing: -0.01em;
+    }
+
+    .empty-sub {
+      font-size: 12px;
+      color: rgba(235, 235, 245, 0.45);
+    }
+
+    .notif-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .notif-app-info {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .notif-app-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 0.5px solid rgba(222, 176, 86, 0.22);
+      box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .icon-term { background: rgba(222, 176, 86, 0.14); color: #deb056; border-color: rgba(222, 176, 86, 0.30); }
+    .icon-msg { background: rgba(222, 176, 86, 0.12); color: #f8df9e; border-color: rgba(222, 176, 86, 0.25); }
+    .icon-sys { background: rgba(222, 176, 86, 0.16); color: #deb056; border-color: rgba(222, 176, 86, 0.35); }
+    .icon-git { background: rgba(222, 176, 86, 0.10); color: #f8df9e; border-color: rgba(222, 176, 86, 0.22); }
+
+    .notif-app-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f8df9e;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .notif-time {
+      font-size: 11.5px;
+      color: rgba(235, 235, 245, 0.55);
+      font-weight: 400;
+    }
+
+    .notif-card-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #f5f4f2;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+    }
+
+    .notif-card-body {
+      font-size: 12px;
+      color: #b8b0a4;
+      line-height: 1.4;
+      font-weight: 400;
+    }
+
+    .notif-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .btn-notif {
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 12px;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      transition: background 0.15s ease, color 0.15s ease, transform 0.12s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .btn-notif:active {
+      transform: scale(0.95);
+    }
+
+    .btn-notif-action {
+      background: rgba(222, 176, 86, 0.14);
+      border: 0.5px solid rgba(222, 176, 86, 0.30);
+      color: #f8df9e;
+    }
+
+    .btn-notif-action:hover {
+      background: rgba(222, 176, 86, 0.25);
+      border-color: rgba(222, 176, 86, 0.50);
+      color: #f5f4f2;
+    }
+
+    .btn-notif-block {
+      background: rgba(255, 255, 255, 0.06);
+      border: 0.5px solid rgba(255, 255, 255, 0.1);
+      color: rgba(235, 235, 245, 0.6);
+    }
+
+    .btn-notif-block:hover {
+      background: rgba(239, 68, 68, 0.18);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    /* iOS Home Indicator Pill at bottom (Matte Titanium Bar) */
+    .ios-home-indicator-wrapper {
+      width: 100%;
+      padding: 10px 0 14px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .ios-home-indicator {
+      width: 134px;
+      height: 5px;
+      border-radius: 100px;
+      background: #deb056;
+      box-shadow: none;
+      transition: background 0.15s ease, transform 0.15s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .ios-home-indicator-wrapper:hover .ios-home-indicator,
+    .ios-home-indicator-wrapper:active .ios-home-indicator {
+      background: #f8df9e;
+      box-shadow: none;
+      transform: scaleY(1.2) scaleX(1.02);
+    }
+
+    /* Floating Toast HUD */
+    .hud-toast {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 8px 16px;
+      background: rgba(14, 13, 12, 0.75);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 0.5px solid rgba(222, 176, 86, 0.25);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #f8df9e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 110;
+      white-space: nowrap;
+    }
+
+    .hud-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Bottom Control Action Bar */
+    .control-deck {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      max-width: 440px;
+      margin-top: 10px;
+    }
+
+    .control-deck button {
+      padding: 7px 12px;
+      border-radius: 10px;
+      background: rgba(16, 15, 14, 0.65);
+      border: 0.5px solid rgba(222, 176, 86, 0.20);
+      color: #c4bcb0;
+      font-size: 10.5px;
+      font-weight: 500;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .control-deck button:hover {
+      background: rgba(28, 25, 22, 0.85);
+      border-color: rgba(222, 176, 86, 0.45);
+      color: #f5f4f2;
+      box-shadow: none;
+    }
+
+    /* ====================================================
+       POCO F1 NATIVE FULL-SCREEN RESPONSIVE ENGINE
+       Eliminates desktop chassis wrapper, padding offsets & simulated notch on real phone
+       ==================================================== */
+    @media (max-width: 600px), (hover: none) and (pointer: coarse) {
+      html, body {
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        background: #000000 !important;
+        display: block !important;
+      }
+
+      .viewport-wrapper {
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        gap: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+      }
+
+      /* Hide desktop headers & control deck on phone */
+      .header-bar,
+      .control-deck {
+        display: none !important;
+      }
+
+      /* Seamless Edge-to-Edge Chassis */
+      .device-chassis {
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-width: 100vw !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+      }
+
+      .device-chassis::before {
+        display: none !important;
+      }
+
+      .screen {
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        border-radius: 0 !important;
+        border: none !important;
+      }
+
+      /* Hide fake notch since Poco F1 already has real physical notch */
+      .waterdrop-notch {
+        display: none !important;
+      }
+
+      /* Safe area status bar integration */
+      .status-bar {
+        padding-top: max(8px, env(safe-area-inset-top)) !important;
+      }
+    }
+
+    @keyframes drawerSpringInLeft {
+      0% {
+        transform: translate3d(-20px, 24px, 0) scale(0.96);
+        opacity: 0.6;
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes drawerSpringInRight {
+      0% {
+        transform: translate3d(20px, 24px, 0) scale(0.96);
+        opacity: 0.6;
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="viewport-wrapper">
+    <div class="header-bar">
+      <h1>Poco F1 ButterOS Shell</h1>
+      <p>Clean Dark Architecture • Dual Straight Rails • App Drawer Pop-Up</p>
+    </div>
+
+    <!-- Phone Chassis -->
+    <div class="device-chassis" id="deviceChassis">
+      <div class="screen" id="screen">
+        
+        <!-- Poco F1 Physical Hardware Notch Cutout (Desktop Reference Only - Zero Pixels Over Notch) -->
+        <div class="waterdrop-notch" id="hardwareNotch">
+          <div class="notch-hardware">
+            <div class="notch-ir-sensor" title="IR Face Unlock Camera"></div>
+            <div class="notch-earpiece"></div>
+            <div class="notch-camera" title="20MP Selfie Camera"></div>
+          </div>
+        </div>
+
+        <!-- Status Bar: Flanking Display Horns (Zero pixels in center notch x=86..274px) -->
+        <div class="status-bar" id="statusBar">
+          <!-- Left Display Horn: Clock & Left Dynamic Island Wing -->
+          <div class="status-horn-left">
+            <div class="status-time" id="statusTime">09:41</div>
+            <div class="island-wing island-wing-left" id="islandWingLeft" title="Dynamic Island: Tap to open alerts">
+              <div class="island-icon" id="islandIcon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+              </div>
+              <div class="island-title" id="islandTitle">ButterOS</div>
+            </div>
+          </div>
+
+          <!-- Right Display Horn: Battery/Wi-Fi & Right Dynamic Island Wing -->
+          <div class="status-horn-right">
+            <div class="status-right" id="statusRight">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/></svg>
+            </div>
+            <div class="island-wing island-wing-right" id="islandWingRight" title="Dynamic Island: Tap to open alerts">
+              <div class="island-status-pill" id="islandStatus">Ready</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Home Canvas -->
+        <div class="home-canvas" id="homeCanvas">
+          <div class="clock-display" id="clockDisplay">09:41</div>
+          <div class="date-display" id="dateDisplay">Thursday, Sept 24</div>
+          <div class="system-chip">SDM845 • BERYLLIUM • ADRENO 630</div>
+
+          <!-- Browser Tab (Search Pill) -->
+          <div class="home-browser-tab" id="homeBrowserTab" title="Open Web Browser">
+            <div class="browser-tab-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="browser-tab-text">Search ButterOS or URL...</div>
+            <div class="browser-tab-action">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+
+          <!-- 4 Permanent Bottom Dock Icons on Down -->
+          <div class="home-permanent-dock" id="homePermanentDock">
+            <div class="dock-app-slot" data-app="terminal" title="Terminal">
+              <div class="dock-icon-glyph"><svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></div>
+              <div class="dock-icon-label">Terminal</div>
+            </div>
+            <div class="dock-app-slot" data-app="chat" title="Messages">
+              <div class="dock-icon-glyph"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+              <div class="dock-icon-label">Messages</div>
+            </div>
+            <div class="dock-app-slot" data-app="files" title="Files">
+              <div class="dock-icon-glyph"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+              <div class="dock-icon-label">Files</div>
+            </div>
+            <div class="dock-app-slot" data-app="browser" title="Web">
+              <div class="dock-icon-glyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+              <div class="dock-icon-label">Web</div>
+            </div>
+          </div>
+          <div class="gesture-hint-card">
+            <span class="primary-hint">Swipe inward from bezel to summon Rails</span>
+            <span class="sub-hint">• Permanent dock & browser tab vanish when rails activate</span>
+            <span class="sub-hint">• Swipe rails inward to join into App Drawer</span>
+            <span class="sub-hint">• Tap middle area between rails to return home</span>
+          </div>
+        </div>
+
+        <!-- Loop Crossover Visual Guides (Continuous Chain across both rails) -->
+        <div class="loop-crossover-bridge loop-bridge-top"></div>
+        <div class="loop-crossover-bridge loop-bridge-bottom"></div>
+
+        <!-- Edge Summon Guides (Visible when rails retracted) -->
+        <div class="edge-swipe-guide edge-guide-left" id="guideLeft" title="Tap or swipe in to summon rails"></div>
+        <div class="edge-swipe-guide edge-guide-right" id="guideRight" title="Tap or swipe in to summon rails"></div>
+
+        <!-- LEFT STRAIGHT RAIL -->
+        <div class="icon-rail rail-left" id="railLeft">
+          <div class="rail-conveyor-track" id="trackLeft"></div>
+        </div>
+
+        <!-- RIGHT STRAIGHT RAIL -->
+        <div class="icon-rail rail-right" id="railRight">
+          <div class="rail-conveyor-track" id="trackRight"></div>
+          <div class="drawer-scroll-indicator" id="drawerScrollIndicator"></div>
+        </div>
+
+        <!-- DRAWER TOP PULL-DOWN HANDLE (Hover indicator & drag to Home Page) -->
+        <div class="drawer-top-handle" id="drawerTopHandle" title="Drag down or tap to return to Home Page"></div>
+
+        <!-- CORNER NOTIFICATION HOVER GUIDES ("Hover thing" flush with curved bezel corners) -->
+        <div class="corner-hover-indicator corner-indicator-left" id="cornerIndicatorLeft" title="Swipe up for Quick Settings">
+          <svg viewBox="0 0 48 48" class="corner-indicator-svg">
+            <path d="M 2 14 A 32 32 0 0 0 34 46" fill="none" stroke="rgba(255, 255, 255, 0.55)" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="corner-hover-indicator corner-indicator-right" id="cornerIndicatorRight" title="Swipe up for Quick Settings">
+          <svg viewBox="0 0 48 48" class="corner-indicator-svg">
+            <path d="M 14 46 A 32 32 0 0 0 46 14" fill="none" stroke="rgba(255, 255, 255, 0.55)" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <!-- BORDERLESS 3D SPATIAL NOTIFICATION DECK (Opposite-Flank HUD) -->
+        <div class="spatial-notif-deck" id="spatialNotifDeck">
+          <div class="spatial-deck-track" id="spatialDeckTrack"></div>
+          <div class="spatial-deck-indicators" id="spatialDeckIndicators"></div>
+        </div>
+
+        <!-- LEFT RADIAL QUICK SETTINGS ARC -->
+        <div class="quarter-circle-arc quarter-circle-left" id="arcLeft">
+          <svg class="radial-grid-svg" id="svgArcLeft" viewBox="0 0 330 330"></svg>
+        </div>
+
+        <!-- RIGHT RADIAL QUICK SETTINGS ARC -->
+        <div class="quarter-circle-arc quarter-circle-right" id="arcRight">
+          <svg class="radial-grid-svg" id="svgArcRight" viewBox="0 0 330 330"></svg>
+        </div>
+
+        <!-- APPLE IOS NOTIFICATION CENTER (Full Screen Edge-to-Edge) -->
+        <div class="notif-modal notif-dropdown" id="notifModal">
+          <!-- Top Safe Area Spacer under Notch -->
+          <div class="notif-top-safe-area"></div>
+
+          <!-- Notification Center Header -->
+          <div class="notif-dropdown-header">
+            <div class="notif-header-title">
+              <span>Notification Center</span>
+              <span class="notif-badge" id="notifCountBadge">4</span>
+            </div>
+            <div class="notif-header-actions">
+              <button class="btn-clear-all" id="btnClearAllNotifs" title="Clear All Notifications">Clear</button>
+              <button class="notif-close-btn" id="notifCloseBtn" title="Close">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Scrollable Swipeable Notification Cards List (Full Height, Zero Scrollbar) -->
+          <div class="notif-list" id="notifList"></div>
+
+          <!-- iOS Home Indicator Pill at bottom -->
+          <div class="ios-home-indicator-wrapper" id="shadeBottomHandle" title="Swipe or tap to close">
+            <div class="ios-home-indicator"></div>
+          </div>
+        </div>
+
+        <!-- Floating HUD Toast -->
+        <div class="hud-toast" id="hudToast">
+          <span id="toastMsg">Toast notification</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Quick Control Deck -->
+    <div class="control-deck">
+      <button id="btnOpenDrawer">📂 Pop Up App Drawer</button>
+      <button id="btnToggleRails">↔️ Retract / Pop Up Rails</button>
+      <button id="btnOpenArcLeft">⚙️ Left Quick Settings</button>
+      <button id="btnOpenArcRight">⚙️ Right Quick Settings</button>
+      <button id="btnOpenNotifs">🔔 ButterOS Notifications (4)</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Elements
+      const screen = document.getElementById('screen');
+      const railLeft = document.getElementById('railLeft');
+      const railRight = document.getElementById('railRight');
+      const trackLeft = document.getElementById('trackLeft');
+      const trackRight = document.getElementById('trackRight');
+      const homeCanvas = document.getElementById('homeCanvas');
+      const guideLeft = document.getElementById('guideLeft');
+      const guideRight = document.getElementById('guideRight');
+      const cornerIndicatorLeft = document.getElementById('cornerIndicatorLeft');
+      const cornerIndicatorRight = document.getElementById('cornerIndicatorRight');
+      const arcLeft = document.getElementById('arcLeft');
+      const arcRight = document.getElementById('arcRight');
+      const svgArcLeft = document.getElementById('svgArcLeft');
+      const svgArcRight = document.getElementById('svgArcRight');
+      const notifModal = document.getElementById('notifModal');
+      const notifCloseBtn = document.getElementById('notifCloseBtn');
+      const notifList = document.getElementById('notifList');
+      const notifCountBadge = document.getElementById('notifCountBadge');
+      const hudToast = document.getElementById('hudToast');
+      const toastMsg = document.getElementById('toastMsg');
+
+      // Live Clock
+      function updateClock() {
+        const now = new Date();
+        const hrs = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        document.getElementById('clockDisplay').textContent = `${hrs}:${mins}`;
+        document.getElementById('statusTime').textContent = `${hrs}:${mins}`;
+        const shadeClock = document.getElementById('shadeClock');
+        if (shadeClock) shadeClock.textContent = `${hrs}:${mins}`;
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      // Dynamic Island Live Feedback: Flanking Horn Pods Architecture
+      const islandWingLeft = document.getElementById('islandWingLeft');
+      const islandWingRight = document.getElementById('islandWingRight');
+      const islandTitle = document.getElementById('islandTitle');
+      const islandStatus = document.getElementById('islandStatus');
+      const islandIcon = document.getElementById('islandIcon');
+      let islandTimer = null;
+
+      function triggerIsland(title, status = 'Active', iconSvg = null) {
+        if (islandTitle) islandTitle.textContent = title;
+        if (islandStatus) islandStatus.textContent = status;
+        if (islandIcon) {
+          if (iconSvg) {
+            islandIcon.innerHTML = iconSvg;
+          } else {
+            islandIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>';
+          }
+        }
+        screen.classList.add('island-active');
+        clearTimeout(islandTimer);
+        islandTimer = setTimeout(() => {
+          screen.classList.remove('island-active');
+        }, 2200);
+      }
+
+      // Tap on either wing opens Notification Center
+      if (islandWingLeft) {
+        islandWingLeft.addEventListener('click', (e) => {
+          e.stopPropagation();
+          screen.classList.remove('island-active');
+          openNotifModal();
+        });
+      }
+      if (islandWingRight) {
+        islandWingRight.addEventListener('click', (e) => {
+          e.stopPropagation();
+          screen.classList.remove('island-active');
+          openNotifModal();
+        });
+      }
+
+      function showToast(text) {
+        triggerIsland(text, 'Opening');
+      }
+
+      // ====================================================
+      // SVG VECTOR ICON DICTIONARY (Clean, Refined Modern Glyphs)
+      // ====================================================
+      const SVG_ICONS = {
+        terminal: '<svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
+        files: '<svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
+        browser: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+        settings: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+        notes: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+        camera: '<svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+        music: '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+        monitor: '<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+        chat: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+        packages: '<svg viewBox="0 0 24 24"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+        gallery: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+        calc: '<svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01"/></svg>',
+        clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+        code: '<svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+        maps: '<svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>',
+        battery: '<svg viewBox="0 0 24 24"><rect x="1" y="6" width="18" height="12" rx="2" ry="2"/><line x1="23" y1="13" x2="23" y2="11"/></svg>',
+        wifi: '<svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
+        bluetooth: '<svg viewBox="0 0 24 24"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/></svg>',
+        cellular: '<svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="4" y2="16"/><line x1="9" y1="20" x2="9" y2="12"/><line x1="14" y1="20" x2="14" y2="8"/><line x1="19" y1="20" x2="19" y2="4"/></svg>',
+        hotspot: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>',
+        torch: '<svg viewBox="0 0 24 24"><path d="M18 6l-3.5 3.5M6 18l3.5-3.5M10.5 4.5l9 9-4.5 4.5-9-9 4.5-4.5z"/></svg>',
+        sound: '<svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
+        airplane: '<svg viewBox="0 0 24 24"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.8-.2-1.6.3-1.8 1.1s.3 1.6 1.1 1.8l6.9 2.5-3.5 3.5-2.4-.6c-.5-.1-1 .2-1.2.7-.2.5.1 1 .5 1.3l2.8 2.1 2.1 2.8c.3.4.8.7 1.3.5.5-.2.8-.7.7-1.2l-.6-2.4 3.5-3.5 2.5 6.9c.2.8 1 1.3 1.8 1.1.8-.2 1.3-1 1.1-1.8z"/></svg>',
+        gps: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>',
+        mail: '<svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+        calendar: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+        weather: '<svg viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>',
+        contacts: '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+        video: '<svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
+        mic: '<svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+        shield: '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+        disk: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>',
+        tasks: '<svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+        pdf: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        cpu: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>',
+        radio: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>',
+        download: '<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+        font: '<svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+        game: '<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="4"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="15" cy="13" r="1"/><circle cx="18" cy="11" r="1"/></svg>',
+        usb: '<svg viewBox="0 0 24 24"><circle cx="10" cy="14" r="2"/><line x1="10" y1="12" x2="10" y2="4"/><polygon points="8 4 12 4 10 1 8 4"/></svg>',
+        search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+        wayland: '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+        help: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+      };
+
+      // 40 Apps on Single Continuous Conveyor Loop & 4x10 Scrollable App Drawer
+      const ALL_APPS = [
+        // Left Rail slots (0..19)
+        { key: 'terminal', name: 'Terminal' },
+        { key: 'files', name: 'Files' },
+        { key: 'browser', name: 'Web' },
+        { key: 'settings', name: 'Settings' },
+        { key: 'notes', name: 'Notes' },
+        { key: 'camera', name: 'Camera' },
+        { key: 'music', name: 'Music' },
+        { key: 'monitor', name: 'Monitor' },
+        { key: 'chat', name: 'Chat' },
+        { key: 'packages', name: 'Packages' },
+        { key: 'gallery', name: 'Gallery' },
+        { key: 'calc', name: 'Calculator' },
+        { key: 'clock', name: 'Clock' },
+        { key: 'code', name: 'Code IDE' },
+        { key: 'maps', name: 'Maps' },
+        { key: 'battery', name: 'Power' },
+        { key: 'wifi', name: 'Network' },
+        { key: 'hotspot', name: 'Modem' },
+        { key: 'torch', name: 'Torch' },
+        { key: 'sound', name: 'Audio' },
+
+        // Right Rail slots (20..39)
+        { key: 'mail', name: 'Mail' },
+        { key: 'calendar', name: 'Calendar' },
+        { key: 'weather', name: 'Weather' },
+        { key: 'contacts', name: 'Contacts' },
+        { key: 'video', name: 'Video' },
+        { key: 'mic', name: 'Recorder' },
+        { key: 'shield', name: 'Security' },
+        { key: 'disk', name: 'Disks' },
+        { key: 'tasks', name: 'Tasks' },
+        { key: 'pdf', name: 'PDF Reader' },
+        { key: 'cpu', name: 'CPU Tweaks' },
+        { key: 'bluetooth', name: 'Bluetooth' },
+        { key: 'radio', name: 'Radio' },
+        { key: 'download', name: 'Downloads' },
+        { key: 'font', name: 'Fonts' },
+        { key: 'game', name: 'Games' },
+        { key: 'usb', name: 'USB Host' },
+        { key: 'search', name: 'Finder' },
+        { key: 'wayland', name: 'Wayland' },
+        { key: 'help', name: 'Help' }
+      ];
+
+      // ====================================================
+      // SINGLE CONTINUOUS CONVEYOR LOOP ACROSS BOTH RAILS
+      // (The two rails form one single continuous conveyor loop!)
+      // - Items exiting top of Left rail cross over to top of Right rail
+      // - Items exiting bottom of Right rail cross over to bottom of Left rail
+      // ====================================================
+      const SLOT_HEIGHT = 76;
+      const TOTAL_APPS = ALL_APPS.length; // 40 apps
+      const TOTAL_LOOP = TOTAL_APPS * SLOT_HEIGHT; // 3040px
+      const HALF_LOOP = (TOTAL_APPS / 2) * SLOT_HEIGHT; // 1520px (20 apps per rail)
+
+      let loopScrollOffset = 0;
+      let drawerOpen = false;
+      let drawerScrollOffset = 0;
+      let baseDrawerScrollOffset = 0;
+      const conveyorIconElements = [];
+
+      ALL_APPS.forEach((app, i) => {
+        const slot = document.createElement('div');
+        slot.className = 'app-icon-slot';
+        slot.innerHTML = `
+          <div class="app-icon-glyph">${SVG_ICONS[app.key] || SVG_ICONS.terminal}</div>
+          <div class="app-icon-label">${app.name}</div>
+        `;
+        slot.onclick = (e) => {
+          if (hasDragged) return;
+          e.stopPropagation();
+          slot.style.transform += ' scale(0.86)';
+          setTimeout(() => { if (drawerOpen) renderConveyor(); }, 150);
+          const glyphSvg = SVG_ICONS[app.key] || SVG_ICONS.terminal;
+          triggerIsland(app.name, 'Opening...', glyphSvg);
+          if (drawerOpen) {
+            setTimeout(() => { if (drawerOpen) dismissDrawerToHome(true); }, 250);
+          }
+        };
+
+        const halfApps = TOTAL_APPS / 2;
+        const initialRail = i < halfApps ? 'left' : 'right';
+        if (initialRail === 'left') {
+          trackLeft.appendChild(slot);
+        } else {
+          trackRight.appendChild(slot);
+        }
+
+        conveyorIconElements.push({
+          el: slot,
+          index: i,
+          app: app,
+          currentRail: initialRail
+        });
+      });
+
+      function renderConveyor() {
+        const halfApps = TOTAL_APPS / 2;
+        if (drawerOpen) {
+          // CONVERTED APP DRAWER: Rails slide together & JOIN into single unified 4x10 scrollable grid
+          const minScroll = -290;
+          const maxScroll = 0;
+
+          // Update floating scrollbar
+          const scrollIndicator = document.getElementById('drawerScrollIndicator');
+          if (scrollIndicator) {
+            const scrollPercent = (-drawerScrollOffset) / (-minScroll);
+            const maxTravel = 540;
+            const indicatorY = Math.max(0, Math.min(maxTravel, scrollPercent * maxTravel));
+            scrollIndicator.style.transform = `translate3d(0, ${indicatorY.toFixed(1)}px, 0)`;
+          }
+
+          // Auto-hide drawer top pull handle when scrolled down, fade in at top
+          const topHandle = document.getElementById('drawerTopHandle');
+          if (topHandle) {
+            if (drawerScrollOffset < -12) {
+              topHandle.style.opacity = '0';
+              topHandle.style.pointerEvents = 'none';
+            } else {
+              topHandle.style.opacity = '1';
+              topHandle.style.pointerEvents = 'auto';
+            }
+          }
+
+          conveyorIconElements.forEach((item, i) => {
+            const isLeft = i < halfApps;
+            const targetRail = isLeft ? 'left' : 'right';
+            const localIndex = isLeft ? i : (i - halfApps);
+            const col = localIndex % 2;
+            const row = Math.floor(localIndex / 2);
+
+            // Perfectly centered, symmetrical 4-column layout on any screen width
+            const railWidth = railLeft.clientWidth || 170;
+            const slotW = 58;
+            const gap = Math.max(6, (railWidth - (2 * slotW)) / 3);
+            const col0 = Math.round(gap);
+            const col1 = Math.round(gap * 2 + slotW);
+            const xPos = col === 0 ? col0 : col1;
+            const yPos = 36 + drawerScrollOffset + row * 92;
+
+            if (item.currentRail !== targetRail) {
+              if (targetRail === 'left') {
+                trackLeft.appendChild(item.el);
+              } else {
+                trackRight.appendChild(item.el);
+              }
+              item.currentRail = targetRail;
+            }
+
+            item.el.style.transform = `translate3d(${xPos}px, ${yPos.toFixed(1)}px, 0)`;
+          });
+          return;
+        }
+
+        // RAILS CONVEYOR MODE: Continuous 20-app loop across both rails
+        conveyorIconElements.forEach(item => {
+          const rawPos = item.index * SLOT_HEIGHT + loopScrollOffset;
+          const modPos = ((rawPos % TOTAL_LOOP) + TOTAL_LOOP) % TOTAL_LOOP;
+
+          let targetRail = 'left';
+          let yPos = 0;
+
+          if (modPos < HALF_LOOP) {
+            // First 10 slots on LEFT RAIL: moves down screen
+            targetRail = 'left';
+            yPos = modPos - 18;
+          } else {
+            // Second 10 slots on RIGHT RAIL: moves up screen
+            targetRail = 'right';
+            const rightDist = modPos - HALF_LOOP;
+            yPos = (HALF_LOOP - rightDist) - 18;
+          }
+
+          if (item.currentRail !== targetRail) {
+            if (targetRail === 'left') {
+              trackLeft.appendChild(item.el);
+            } else {
+              trackRight.appendChild(item.el);
+            }
+            item.currentRail = targetRail;
+          }
+
+          const railX = Math.max(8, Math.round(((railLeft.clientWidth || 88) - 60) / 2));
+          item.el.style.transform = `translate3d(${railX}px, ${yPos.toFixed(1)}px, 0)`;
+        });
+      }
+
+      renderConveyor();
+
+      // ====================================================
+      // RADIAL QUICK SETTINGS TILES (Clean, Refined System Toggles)
+      // ====================================================
+      const POLAR_RINGS = [
+        { r1: 82,  r2: 148 }, // Inner Tier
+        { r1: 154, r2: 220 }, // Middle Tier
+        { r1: 226, r2: 292 }  // Outer Tier
+      ];
+
+      // 6 Rotating Radial Spokes (18 Rich Quick Action Tiles that revolve continuously!)
+      const QUICK_COLUMNS = [
+        // Spoke 0: Comms & Base
+        [
+          { ring: 0, id: 'airplane', name: 'AIRPLANE', status: 'Standby',      glyph: 'airplane', active: false },
+          { ring: 1, id: 'hotspot',  name: 'HOTSPOT',  status: '2 Clients',    glyph: 'hotspot',  active: false },
+          { ring: 2, id: 'wifi',     name: 'WI-FI',    status: 'ButterNet 5G', glyph: 'wifi',     active: true }
+        ],
+        // Spoke 1: Power & Flash
+        [
+          { ring: 0, id: 'battery',  name: 'BATTERY',  status: '88% Fast',     glyph: 'battery',   active: true },
+          { ring: 1, id: 'torch',    name: 'TORCH',    status: '100% Beam',    glyph: 'torch',     active: false },
+          { ring: 2, id: 'bt',       name: 'BLUETOOTH', status: 'WH-1000XM5',  glyph: 'bluetooth', active: true }
+        ],
+        // Spoke 2: Location & Sound
+        [
+          { ring: 0, id: 'gps',      name: 'LOCATION', status: 'GPS Locked',   glyph: 'gps',       active: true },
+          { ring: 1, id: 'sound',    name: 'SOUND',    status: '80% Dolby',    glyph: 'sound',     active: true },
+          { ring: 2, id: 'cell',     name: 'CELLULAR', status: 'Butter 5G',    glyph: 'cellular',  active: true }
+        ],
+        // Spoke 3: Display & Casting
+        [
+          { ring: 0, id: 'dark',     name: 'DARK MODE', status: 'AMOLED Pure', glyph: 'weather',   active: true },
+          { ring: 1, id: 'nfc',      name: 'NFC PAY',   status: 'Ready',       glyph: 'packages',  active: false },
+          { ring: 2, id: 'cast',     name: 'CAST',     status: 'Smart TV',     glyph: 'monitor',   active: false }
+        ],
+        // Spoke 4: Eye Care & Security
+        [
+          { ring: 0, id: 'night',    name: 'NIGHT LIGHT', status: 'Warm 3200K', glyph: 'clock',    active: true },
+          { ring: 1, id: 'rotate',   name: 'ROTATE',   status: 'Portrait Lock', glyph: 'camera',   active: false },
+          { ring: 2, id: 'vpn',      name: 'WIREGUARD', status: '12ms Enc',    glyph: 'code',      active: true }
+        ],
+        // Spoke 5: Productivity & Media
+        [
+          { ring: 0, id: 'dnd',      name: 'DND ZEN',  status: 'Priority Only', glyph: 'notes',    active: false },
+          { ring: 1, id: 'sync',     name: 'CLOUD SYNC', status: 'Live Synced', glyph: 'search',   active: true },
+          { ring: 2, id: 'record',   name: 'SCREEN REC', status: '1080p 60fps', glyph: 'calc',     active: false }
+        ]
+      ];
+
+      // ButterOS Linux Notifications Feed Data Model
+      const BUTTEROS_NOTIFS = [
+        {
+          id: 'term-1',
+          app: 'Terminal',
+          iconClass: 'icon-term',
+          time: '2m ago',
+          title: 'apk: System Upgrade Complete',
+          body: 'Mesa 24.1 (Turnip Vulkan) and wlroots 0.17 packages updated.',
+          actionLabel: 'Launch',
+          blocked: false
+        },
+        {
+          id: 'modem-1',
+          app: 'Messages',
+          iconClass: 'icon-msg',
+          time: '14m ago',
+          title: 'ModemManager • SIM 1',
+          body: 'LTE Carrier Registration: VoLTE profile verified active.',
+          actionLabel: 'Open',
+          blocked: false
+        },
+        {
+          id: 'sys-1',
+          app: 'System',
+          iconClass: 'icon-sys',
+          time: '45m ago',
+          title: 'Energy Aware Scheduler',
+          body: 'SDM845 Silver cores suspended. Deep sleep power draw optimal.',
+          actionLabel: 'Telemetry',
+          blocked: false
+        },
+        {
+          id: 'git-1',
+          app: 'Git',
+          iconClass: 'icon-git',
+          time: '2h ago',
+          title: 'ButterOS Shell Synced',
+          body: 'Local build tree cleanly synchronized with upstream.',
+          actionLabel: 'Diff',
+          blocked: false
+        }
+      ];
+
+      let revolverAngleLeft = 0;
+      let revolverAngleRight = 0;
+
+      function polarPt(isLeft, r, deg) {
+        const rad = deg * (Math.PI / 180);
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const cx = isLeft ? 0 : 330;
+        const cy = 330;
+        return {
+          x: isLeft ? (cx + r * cos) : (cx - r * cos),
+          y: cy - r * sin
+        };
+      }
+
+      function makePolarPath(isLeft, r1, r2, a1, a2) {
+        const p1 = polarPt(isLeft, r2, a1);
+        const p2 = polarPt(isLeft, r2, a2);
+        const p3 = polarPt(isLeft, r1, a2);
+        const p4 = polarPt(isLeft, r1, a1);
+
+        const outerSweep = isLeft ? 0 : 1;
+        const innerSweep = isLeft ? 1 : 0;
+
+        return `M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} ` +
+               `A ${r2} ${r2} 0 0 ${outerSweep} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)} ` +
+               `L ${p3.x.toFixed(1)} ${p3.y.toFixed(1)} ` +
+               `A ${r1} ${r1} 0 0 ${innerSweep} ${p4.x.toFixed(1)} ${p4.y.toFixed(1)} Z`;
+      }
+
+      function renderPolarGrid(svgEl, isLeft) {
+        if (!svgEl) return;
+        svgEl.innerHTML = '';
+        const cx = isLeft ? 0 : 330;
+        const cy = 330;
+        const revAngle = isLeft ? revolverAngleLeft : revolverAngleRight;
+        const sfx = isLeft ? 'l' : 'r';
+
+        // Luxury Horology Radial Gradients & Specular Rims in SVG Defs
+        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        defs.innerHTML = `
+          <radialGradient id="gradTileActive_${sfx}" cx="${isLeft ? '20%' : '80%'}" cy="80%" r="85%">
+            <stop offset="0%" stop-color="#ffd573" stop-opacity="0.36"/>
+            <stop offset="45%" stop-color="#deb056" stop-opacity="0.24"/>
+            <stop offset="100%" stop-color="#2a2010" stop-opacity="0.55"/>
+          </radialGradient>
+          <radialGradient id="gradTileIdle_${sfx}" cx="${isLeft ? '20%' : '80%'}" cy="80%" r="85%">
+            <stop offset="0%" stop-color="#1e1a16" stop-opacity="0.80"/>
+            <stop offset="60%" stop-color="#12100e" stop-opacity="0.88"/>
+            <stop offset="100%" stop-color="#070605" stop-opacity="0.94"/>
+          </radialGradient>
+          <linearGradient id="gradRimActive_${sfx}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fff0c7" stop-opacity="0.95"/>
+            <stop offset="50%" stop-color="#deb056" stop-opacity="0.75"/>
+            <stop offset="100%" stop-color="#805d1e" stop-opacity="0.35"/>
+          </linearGradient>
+          <linearGradient id="gradRimIdle_${sfx}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="rgba(222, 176, 86, 0.32)"/>
+            <stop offset="100%" stop-color="rgba(222, 176, 86, 0.08)"/>
+          </linearGradient>
+        `;
+        svgEl.appendChild(defs);
+
+        // Blueprint Concentric Guides (Curved flush with screen corners)
+        const gridG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        gridG.setAttribute('opacity', '0.28');
+
+        [80, 151, 223, 295].forEach(r => {
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', cx);
+          circle.setAttribute('cy', cy);
+          circle.setAttribute('r', r);
+          circle.setAttribute('stroke', 'rgba(222, 176, 86, 0.22)');
+          circle.setAttribute('stroke-width', '1');
+          circle.setAttribute('stroke-dasharray', '2 4');
+          circle.setAttribute('fill', 'none');
+          gridG.appendChild(circle);
+        });
+
+        // Revolving Spokes: Continuous wrap-around rotary dial
+        const TOTAL_SPOKES = QUICK_COLUMNS.length; // 6 spokes
+        const SPOKE_STEP = 30; // 30 deg per spoke
+        const CYCLE = TOTAL_SPOKES * SPOKE_STEP; // 180 deg
+        const baseNorm = ((revAngle % CYCLE) + CYCLE) % CYCLE;
+
+        for (let s = 0; s < TOTAL_SPOKES; s++) {
+          const rawSpokeAngle = s * SPOKE_STEP + baseNorm;
+          const candidates = [rawSpokeAngle - CYCLE, rawSpokeAngle, rawSpokeAngle + CYCLE];
+
+          for (const ang of candidates) {
+            // Render spoke if within or near visible quadrant
+            if (ang < -28 || ang > 118) continue;
+
+            const a1 = ang + 2;
+            const a2 = ang + 28;
+
+            // Spoke index guide line
+            const guideLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            const ptStart = polarPt(isLeft, 80, a1 - 1);
+            const ptEnd = polarPt(isLeft, 294, a1 - 1);
+            guideLine.setAttribute('x1', ptStart.x.toFixed(1));
+            guideLine.setAttribute('y1', ptStart.y.toFixed(1));
+            guideLine.setAttribute('x2', ptEnd.x.toFixed(1));
+            guideLine.setAttribute('y2', ptEnd.y.toFixed(1));
+            guideLine.setAttribute('stroke', 'rgba(222, 176, 86, 0.22)');
+            guideLine.setAttribute('stroke-width', '1');
+            guideLine.setAttribute('stroke-dasharray', '2 4');
+            gridG.appendChild(guideLine);
+
+            // Render the 3 tier tiles in this spoke
+            const columnTiles = QUICK_COLUMNS[s];
+            columnTiles.forEach(tile => {
+              const ring = POLAR_RINGS[tile.ring];
+              const d = makePolarPath(isLeft, ring.r1, ring.r2, a1, a2);
+
+              const rMid = (ring.r1 + ring.r2) / 2;
+              const aMid = (a1 + a2) / 2;
+              const center = polarPt(isLeft, rMid, aMid);
+
+              const tileG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+              tileG.setAttribute('class', 'polar-tile-block' + (tile.active ? ' is-active' : ''));
+
+              // Curved Sector Path
+              const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              path.setAttribute('class', 'tile-sector-path');
+              path.setAttribute('d', d);
+              tileG.appendChild(path);
+
+              // Vector Glyph
+              const glyphG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+              glyphG.setAttribute('transform', `translate(${(center.x - 10).toFixed(1)}, ${(center.y - 18).toFixed(1)})`);
+              glyphG.setAttribute('class', 'tile-glyph');
+              glyphG.setAttribute('pointer-events', 'none');
+              const rawSvg = SVG_ICONS[tile.glyph] || SVG_ICONS.wifi;
+              glyphG.innerHTML = rawSvg.replace('<svg', '<svg width="20" height="20" class="tile-glyph-svg"');
+              tileG.appendChild(glyphG);
+
+              // Label
+              const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              label.setAttribute('class', 'tile-label');
+              label.setAttribute('x', center.x.toFixed(1));
+              label.setAttribute('y', (center.y + 5).toFixed(1));
+              label.textContent = tile.name;
+              tileG.appendChild(label);
+
+              // Active Clean Matte Indicator Pip
+              if (tile.active) {
+                const led = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                led.setAttribute('class', 'tile-active-led');
+                led.setAttribute('cx', (center.x - 22).toFixed(1));
+                led.setAttribute('cy', (center.y + 14.5).toFixed(1));
+                led.setAttribute('r', '2');
+                led.setAttribute('fill', '#deb056');
+                tileG.appendChild(led);
+              }
+
+              // Dynamic Live Micro-Gauges
+              if (tile.id === 'sound' && tile.active) {
+                const eqG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                eqG.setAttribute('pointer-events', 'none');
+                eqG.innerHTML = `
+                  <rect x="${(center.x + 20).toFixed(1)}" y="${(center.y + 12).toFixed(1)}" width="1.5" height="4" fill="#deb056" opacity="0.8"/>
+                  <rect x="${(center.x + 23).toFixed(1)}" y="${(center.y + 10).toFixed(1)}" width="1.5" height="6" fill="#f8df9e"/>
+                  <rect x="${(center.x + 26).toFixed(1)}" y="${(center.y + 13).toFixed(1)}" width="1.5" height="3" fill="#deb056" opacity="0.7"/>
+                `;
+                tileG.appendChild(eqG);
+              } else if (tile.id === 'battery' && tile.active) {
+                const batG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                batG.setAttribute('pointer-events', 'none');
+                batG.innerHTML = `
+                  <rect x="${(center.x + 19).toFixed(1)}" y="${(center.y + 12).toFixed(1)}" width="8" height="4.5" rx="1" fill="none" stroke="#deb056" stroke-width="0.8"/>
+                  <rect x="${(center.x + 20).toFixed(1)}" y="${(center.y + 13).toFixed(1)}" width="5.5" height="2.5" rx="0.5" fill="#f8df9e"/>
+                `;
+                tileG.appendChild(batG);
+              }
+
+              // Status Subtitle
+              const status = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+              status.setAttribute('class', 'tile-status');
+              status.setAttribute('x', tile.active ? (center.x + 2).toFixed(1) : center.x.toFixed(1));
+              status.setAttribute('y', (center.y + 16).toFixed(1));
+              status.textContent = tile.active ? tile.status : 'Off';
+              tileG.appendChild(status);
+
+              // Interactive Toggle on Tap with fluid Dynamic Island confirmation and tactile spring depression
+              tileG.onclick = (e) => {
+                if (hasDragged) return;
+                e.stopPropagation();
+                tileG.style.transformOrigin = `${center.x.toFixed(1)}px ${center.y.toFixed(1)}px`;
+                tileG.style.transition = 'transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                tileG.style.transform = 'scale(0.92)';
+                setTimeout(() => {
+                  tileG.style.transform = 'scale(1)';
+                }, 140);
+                tile.active = !tile.active;
+                renderPolarGrid(svgArcLeft, true);
+                renderPolarGrid(svgArcRight, false);
+                const tileIconSvg = SVG_ICONS[tile.glyph] || SVG_ICONS.wifi;
+                triggerIsland(tile.name, tile.active ? tile.status : 'Disabled', tileIconSvg);
+              };
+
+              svgEl.appendChild(tileG);
+            });
+          }
+        }
+
+        svgEl.appendChild(gridG);
+
+        // Standalone Neat Completely Round NOTIF Button nestled in the corner curve (Concentric with 34px bezel)
+        const notifCx = isLeft ? 34 : (330 - 34);
+        const notifCy = 296;
+        const notifR = 23;
+
+        const hubBtn = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        hubBtn.setAttribute('class', 'corner-round-notif-btn');
+        hubBtn.setAttribute('style', 'cursor: pointer;');
+
+        function handleHubPress(e) {
+          if (e) {
+            e.stopPropagation();
+            if (e.preventDefault) e.preventDefault();
+          }
+          notifOpenedTimestamp = Date.now();
+          closeArcLeft();
+          closeArcRight();
+          triggerIsland('Notifications', 'Center Opened', '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>');
+          openNotifModal();
+        }
+
+        hubBtn.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+        });
+        hubBtn.addEventListener('pointerup', (e) => {
+          e.stopPropagation();
+          if (e.preventDefault) e.preventDefault();
+          handleHubPress(e);
+        });
+        hubBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (e.preventDefault) e.preventDefault();
+          handleHubPress(e);
+        });
+
+        // Outer halo ring
+        const halo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        halo.setAttribute('cx', notifCx);
+        halo.setAttribute('cy', notifCy);
+        halo.setAttribute('r', notifR + 4);
+        halo.setAttribute('fill', 'none');
+        halo.setAttribute('stroke', 'rgba(222, 176, 86, 0.22)');
+        halo.setAttribute('stroke-width', '1');
+        halo.setAttribute('stroke-dasharray', '2.5 3');
+        halo.setAttribute('pointer-events', 'none');
+        hubBtn.appendChild(halo);
+
+        // Round frosted button body
+        const mainCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        mainCircle.setAttribute('cx', notifCx);
+        mainCircle.setAttribute('cy', notifCy);
+        mainCircle.setAttribute('r', notifR);
+        mainCircle.setAttribute('fill', 'rgba(14, 13, 12, 0.88)');
+        mainCircle.setAttribute('stroke', 'rgba(222, 176, 86, 0.28)');
+        mainCircle.setAttribute('stroke-width', '1');
+        hubBtn.appendChild(mainCircle);
+
+        // Vector Bell Icon
+        const bellG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        bellG.setAttribute('transform', `translate(${notifCx - 8}, ${notifCy - 17})`);
+        bellG.setAttribute('pointer-events', 'none');
+        bellG.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#deb056" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+        hubBtn.appendChild(bellG);
+
+        // Text "NOTIF"
+        const hubText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        hubText.setAttribute('x', notifCx);
+        hubText.setAttribute('y', notifCy + 9);
+        hubText.setAttribute('font-size', '8');
+        hubText.setAttribute('font-weight', '700');
+        hubText.setAttribute('fill', '#f8df9e');
+        hubText.setAttribute('text-anchor', 'middle');
+        hubText.setAttribute('letter-spacing', '0.06em');
+        hubText.setAttribute('pointer-events', 'none');
+        hubText.textContent = 'NOTIF';
+        hubBtn.appendChild(hubText);
+
+        // Counter Badge (Red circle with "4")
+        const badgeX = isLeft ? (notifCx + 13) : (notifCx - 13);
+        const badgeY = notifCy - 14;
+        const unreadCount = BUTTEROS_NOTIFS.filter(n => !n.blocked).length;
+        if (unreadCount > 0) {
+          const badgeCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          badgeCircle.setAttribute('cx', badgeX);
+          badgeCircle.setAttribute('cy', badgeY);
+          badgeCircle.setAttribute('r', '7.5');
+          badgeCircle.setAttribute('fill', '#ef4444');
+          badgeCircle.setAttribute('stroke', '#181512');
+          badgeCircle.setAttribute('stroke-width', '1.5');
+          badgeCircle.setAttribute('pointer-events', 'none');
+          hubBtn.appendChild(badgeCircle);
+
+          const badgeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          badgeText.setAttribute('x', badgeX);
+          badgeText.setAttribute('y', badgeY + 2.5);
+          badgeText.setAttribute('font-size', '7');
+          badgeText.setAttribute('font-weight', '800');
+          badgeText.setAttribute('fill', '#ffffff');
+          badgeText.setAttribute('text-anchor', 'middle');
+          badgeText.setAttribute('pointer-events', 'none');
+          badgeText.textContent = String(unreadCount);
+          hubBtn.appendChild(badgeText);
+        }
+
+        svgEl.appendChild(hubBtn);
+      }
+
+      renderPolarGrid(svgArcLeft, true);
+      renderPolarGrid(svgArcRight, false);
+
+      function renderNotifications() {
+        notifList.innerHTML = '';
+        const visibleNotifs = BUTTEROS_NOTIFS.filter(n => !n.blocked);
+        const unblockedCount = visibleNotifs.length;
+
+        if (unblockedCount === 0) {
+          notifList.innerHTML = `
+            <div class="notif-empty-state">
+              <div class="empty-icon">✓</div>
+              <div class="empty-title">All Caught Up</div>
+              <div class="empty-sub">ButterOS Notification Center is clear</div>
+            </div>
+          `;
+          notifCountBadge.textContent = '0';
+          return;
+        }
+
+        visibleNotifs.forEach(notif => {
+          const card = document.createElement('div');
+          card.className = 'notif-card';
+          card.setAttribute('data-id', notif.id);
+
+          let iconSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>';
+          if (notif.app === 'Terminal') {
+            iconSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#deb056" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>';
+          } else if (notif.app === 'Messages') {
+            iconSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f8df9e" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+          } else if (notif.app === 'System') {
+            iconSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#deb056" stroke-width="2.2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>';
+          } else if (notif.app === 'Git') {
+            iconSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f8df9e" stroke-width="2.2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>';
+          }
+
+          card.innerHTML = `
+            <div class="notif-card-top">
+              <div class="notif-app-info">
+                <div class="notif-app-icon ${notif.iconClass}">${iconSvg}</div>
+                <div class="notif-app-name">${notif.app}</div>
+              </div>
+              <div class="notif-time">${notif.time}</div>
+            </div>
+            <div class="notif-card-title">${notif.title}</div>
+            <div class="notif-card-body">${notif.body}</div>
+            <div class="notif-actions">
+              <button class="btn-notif btn-notif-action">${notif.actionLabel}</button>
+              <button class="btn-notif btn-notif-block" data-id="${notif.id}">Dismiss</button>
+            </div>
+          `;
+
+          // Action button (e.g. Review, Watch, Update All, Open Folder)
+          const actBtn = card.querySelector('.btn-notif-action');
+          actBtn.onclick = (e) => {
+            e.stopPropagation();
+            actBtn.style.transform = 'scale(0.9)';
+            setTimeout(() => { actBtn.style.transform = ''; }, 140);
+            triggerIsland(notif.app, `${notif.actionLabel}ing...`, iconSvg);
+            setTimeout(() => {
+              notif.blocked = true;
+              card.classList.add('is-dismissing');
+              setTimeout(renderNotifications, 240);
+            }, 600);
+          };
+
+          // Dismiss button
+          const blockBtn = card.querySelector('.btn-notif-block');
+          blockBtn.onclick = (e) => {
+            e.stopPropagation();
+            blockBtn.style.transform = 'scale(0.9)';
+            setTimeout(() => { blockBtn.style.transform = ''; }, 140);
+            notif.blocked = true;
+            card.classList.add('is-dismissing');
+            setTimeout(() => {
+              renderNotifications();
+              renderSpatialDeck();
+              renderPolarGrid(svgArcLeft, true);
+              renderPolarGrid(svgArcRight, false);
+              triggerIsland('Notification', `${notif.app} dismissed`);
+            }, 240);
+          };
+
+          // Swipe-to-dismiss gesture on card
+          attachCardSwipe(card, notif);
+
+          notifList.appendChild(card);
+        });
+
+        notifCountBadge.textContent = unblockedCount;
+      }
+
+      function attachCardSwipe(card, notif) {
+        let cardStartX = 0;
+        let cardStartY = 0;
+        let cardIsSwiping = false;
+        let currentCardX = 0;
+
+        card.addEventListener('pointerdown', (e) => {
+          if (e.target.closest('button')) return;
+          cardStartX = e.clientX;
+          cardStartY = e.clientY;
+          cardIsSwiping = false;
+          currentCardX = 0;
+          card.style.transition = 'none';
+
+          function onCardMove(ev) {
+            const dx = ev.clientX - cardStartX;
+            const dy = ev.clientY - cardStartY;
+
+            if (!cardIsSwiping) {
+              if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) {
+                cardIsSwiping = true;
+                if (card.setPointerCapture) {
+                  try { card.setPointerCapture(ev.pointerId); } catch(err) {}
+                }
+              } else if (Math.abs(dy) > 10) {
+                // User is scrolling the notification list vertically: release swipe listener to allow natural touch scrolling
+                window.removeEventListener('pointermove', onCardMove);
+                window.removeEventListener('pointerup', onCardUp);
+                card.style.transition = '';
+                card.style.transform = '';
+                card.style.opacity = '';
+                return;
+              }
+            }
+
+            if (cardIsSwiping) {
+              ev.preventDefault();
+              currentCardX = dx;
+              card.style.transform = `translateX(${dx}px) rotate(${dx * 0.035}deg)`;
+              card.style.opacity = `${Math.max(0.12, 1 - Math.abs(dx) / 220)}`;
+            }
+          }
+
+          function onCardUp(ev) {
+            window.removeEventListener('pointermove', onCardMove);
+            window.removeEventListener('pointerup', onCardUp);
+
+            if (cardIsSwiping) {
+              card.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.22s ease, max-height 0.25s ease, margin 0.25s ease, padding 0.25s ease';
+              if (Math.abs(currentCardX) > 70) {
+                const dir = currentCardX > 0 ? 1 : -1;
+                card.style.transform = `translateX(${dir * 320}px)`;
+                card.style.opacity = '0';
+                card.classList.add('is-dismissing');
+                setTimeout(() => {
+                  notif.blocked = true;
+                  renderNotifications();
+                  renderSpatialDeck();
+                  renderPolarGrid(svgArcLeft, true);
+                  renderPolarGrid(svgArcRight, false);
+                  triggerIsland('Notification', `${notif.app} dismissed`);
+                }, 220);
+              } else {
+                card.style.transform = '';
+                card.style.opacity = '';
+              }
+            }
+          }
+
+          window.addEventListener('pointermove', onCardMove);
+          window.addEventListener('pointerup', onCardUp);
+        });
+      }
+
+      renderNotifications();
+
+      // Clear All Notifications button with Dynamic Island
+      const btnClearAllNotifs = document.getElementById('btnClearAllNotifs');
+      if (btnClearAllNotifs) {
+        btnClearAllNotifs.onclick = (e) => {
+          e.stopPropagation();
+          const cards = notifList.querySelectorAll('.notif-card');
+          if (cards.length === 0) return;
+          cards.forEach((c, idx) => {
+            setTimeout(() => {
+              c.classList.add('is-dismissing');
+            }, idx * 40);
+          });
+          setTimeout(() => {
+            BUTTEROS_NOTIFS.forEach(n => n.blocked = true);
+            renderNotifications();
+            renderSpatialDeck();
+            renderPolarGrid(svgArcLeft, true);
+            renderPolarGrid(svgArcRight, false);
+            triggerIsland('Notifications', 'All Cleared');
+          }, cards.length * 40 + 200);
+        };
+      }
+
+      let notifOpenedTimestamp = 0;
+
+      function openNotifModal() {
+        closeArcLeft();
+        closeArcRight();
+        notifOpenedTimestamp = Date.now();
+        notifModal.classList.add('open');
+        homeCanvas.classList.add('dimmed');
+        notifModal.style.transition = 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.28s ease';
+        notifModal.style.transform = 'translate3d(0, 0, 0)';
+        notifModal.style.opacity = '1';
+      }
+
+      function closeNotifModal() {
+        notifOpenedTimestamp = 0;
+        notifModal.style.transition = 'transform 0.38s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.25s ease';
+        notifModal.style.transform = 'translate3d(0, -100%, 0)';
+        notifModal.style.opacity = '0';
+        setTimeout(() => {
+          if (!isDragging || (activeTarget !== 'top-notif-pull' && activeTarget !== 'notif-push-up')) {
+            notifModal.classList.remove('open');
+            notifModal.style.transition = '';
+            notifModal.style.transform = '';
+            notifModal.style.opacity = '';
+            if (!arcLeft.classList.contains('open') && !arcRight.classList.contains('open') && !drawerOpen && !railsOpen) {
+              homeCanvas.classList.remove('dimmed');
+            }
+          }
+        }, 380);
+      }
+
+      function startNotifPushUp(e, customStartY = null) {
+        isDragging = true;
+        hasDragged = false;
+        activeTarget = 'notif-push-up';
+        startX = e.clientX;
+        startY = customStartY !== null ? customStartY : e.clientY;
+        currentDragX = 0;
+        currentDragY = 0;
+        notifModal.style.transition = 'none';
+      }
+
+      notifCloseBtn.onclick = (e) => {
+        e.stopPropagation();
+        closeNotifModal();
+      };
+
+      const btnOpenNotifsEl = document.getElementById('btnOpenNotifs');
+      if (btnOpenNotifsEl) {
+        btnOpenNotifsEl.onclick = (e) => {
+          e.stopPropagation();
+          if (notifModal.classList.contains('open')) {
+            closeNotifModal();
+          } else {
+            openNotifModal();
+          }
+        };
+      }
+
+      const shadeBottomHandle = document.getElementById('shadeBottomHandle');
+      if (shadeBottomHandle) {
+        shadeBottomHandle.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          startNotifPushUp(e);
+        });
+        shadeBottomHandle.onclick = (e) => {
+          e.stopPropagation();
+          if (!hasDragged) closeNotifModal();
+        };
+      }
+
+      // Status Bar Click & Drag -> Opens Notification Bar
+      const statusBarEl = document.querySelector('.status-bar');
+      if (statusBarEl) {
+        statusBarEl.addEventListener('click', (e) => {
+          if (!drawerOpen) {
+            e.stopPropagation();
+            if (notifModal.classList.contains('open')) {
+              closeNotifModal();
+            } else {
+              openNotifModal();
+            }
+          }
+        });
+        statusBarEl.addEventListener('pointerdown', (e) => {
+          if (!drawerOpen && !notifModal.classList.contains('open')) {
+            isDragging = true;
+            hasDragged = false;
+            activeTarget = 'top-notif-pull';
+            startX = e.clientX;
+            startY = e.clientY;
+            currentDragX = 0;
+            currentDragY = 0;
+            notifModal.style.transition = 'none';
+            e.preventDefault();
+          }
+        });
+      }
+
+      // Notification Header Drag-Up
+      const notifHeader = document.querySelector('.notif-dropdown-header');
+      if (notifHeader) {
+        notifHeader.addEventListener('pointerdown', (e) => {
+          if (e.target.closest('button')) return;
+          startNotifPushUp(e);
+        });
+      }
+
+      // Notification Modal background drag
+      notifModal.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('button, .btn-notif, .notif-close-btn, .btn-clear-all, .notif-card')) return;
+        startNotifPushUp(e);
+      });
+
+      // ====================================================
+      // GESTURE & INTERACTION ENGINE
+      // - Swipe UP from bottom: App drawer pops up from down, rails combine!
+      // - Swipe OUTWARD on rails: Rails retract!
+      // - Swipe INWARD from screen edges: Rails pop up!
+      // - Swipe UP from corner: Quick settings unfolds!
+      // - Revolving rotary dial on quick settings tiles!
+      // - Pull DOWN from top status bar: Notification shade!
+      // ====================================================
+      let railsOpen = true;
+      let isDragging = false;
+      let hasDragged = false;
+      let activeTarget = null;
+      let startX = 0, startY = 0;
+      let currentDragX = 0, currentDragY = 0;
+      let peakDragY = 0;
+      let baseLoopOffset = 0;
+      let arcOpenedTimestamp = 0;
+      let arcStartTheta = 0;
+      let arcBaseRevolver = 0;
+      let isRevolving = false;
+
+      // 1) Corner Hitboxes (Swipe Up -> Quick Settings, accessible anytime including in App Drawer)
+      cornerIndicatorLeft.addEventListener('pointerdown', (e) => {
+        if (notifModal.classList.contains('open')) return;
+        isDragging = true;
+        hasDragged = false;
+        activeTarget = 'corner-left';
+        startX = e.clientX;
+        startY = e.clientY;
+        peakDragY = e.clientY;
+        currentDragX = 0; currentDragY = 0;
+        e.preventDefault();
+      });
+
+      cornerIndicatorRight.addEventListener('pointerdown', (e) => {
+        if (notifModal.classList.contains('open')) return;
+        isDragging = true;
+        hasDragged = false;
+        activeTarget = 'corner-right';
+        startX = e.clientX;
+        startY = e.clientY;
+        peakDragY = e.clientY;
+        currentDragX = 0; currentDragY = 0;
+        e.preventDefault();
+      });
+
+      // 2) Left Rail Touch
+      railLeft.addEventListener('pointerdown', (e) => {
+        if (!railsOpen && !drawerOpen) return;
+        const rect = screen.getBoundingClientRect();
+        const touchY = e.clientY - rect.top;
+        if (drawerOpen) {
+          isDragging = true;
+          hasDragged = false;
+          activeTarget = touchY <= 70 ? 'drawer-top-handle' : 'drawer-left';
+          startX = e.clientX; startY = e.clientY;
+          currentDragX = 0; currentDragY = 0;
+          railLeft.style.transition = 'none';
+          railRight.style.transition = 'none';
+          drawerTopHandle.style.transition = 'none';
+          e.preventDefault();
+          return;
+        }
+        initRailDrag(e, 'rail-left');
+      });
+
+      // 3) Right Rail Touch
+      railRight.addEventListener('pointerdown', (e) => {
+        if (!railsOpen && !drawerOpen) return;
+        const rect = screen.getBoundingClientRect();
+        const touchY = e.clientY - rect.top;
+        if (drawerOpen) {
+          isDragging = true;
+          hasDragged = false;
+          activeTarget = touchY <= 70 ? 'drawer-top-handle' : 'drawer-right';
+          startX = e.clientX; startY = e.clientY;
+          currentDragX = 0; currentDragY = 0;
+          railLeft.style.transition = 'none';
+          railRight.style.transition = 'none';
+          drawerTopHandle.style.transition = 'none';
+          e.preventDefault();
+          return;
+        }
+        initRailDrag(e, 'rail-right');
+      });
+
+      // 3b) Top Handle on Full Drawer (Drag down or tap to Home Page)
+      const drawerTopHandle = document.getElementById('drawerTopHandle');
+      drawerTopHandle.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        hasDragged = false;
+        activeTarget = 'drawer-top-handle';
+        startX = e.clientX;
+        startY = e.clientY;
+        currentDragX = 0;
+        currentDragY = 0;
+        railLeft.style.transition = 'none';
+        railRight.style.transition = 'none';
+        drawerTopHandle.style.transition = 'none';
+        e.preventDefault();
+      });
+
+      drawerTopHandle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dismissDrawerToHome(true);
+      });
+
+      function initRailDrag(e, target) {
+        stopKineticInertia();
+        kineticLastY = e.clientY;
+        kineticLastTime = performance.now();
+        kineticScrollVel = 0;
+        isDragging = true;
+        hasDragged = false;
+        activeTarget = target;
+        startX = e.clientX;
+        startY = e.clientY;
+        currentDragX = 0;
+        currentDragY = 0;
+        baseLoopOffset = loopScrollOffset;
+        e.preventDefault();
+      }
+
+      // 4) Global Screen Pointer Down (Edge summon, drawer dismiss, and corner notifications in drawer)
+      screen.addEventListener('pointerdown', (e) => {
+        if (notifModal.classList.contains('open') || isDragging) return;
+        if (e.target.closest && (e.target.closest('#spatialNotifDeck') || e.target.closest('.spatial-notif-deck'))) {
+          return;
+        }
+        const rect = screen.getBoundingClientRect();
+        const touchX = e.clientX - rect.left;
+        const touchY = e.clientY - rect.top;
+
+        hasDragged = false;
+
+        // Top Status Bar Pull-Down for Notifications (Dedicated only for notifications!)
+        if (!drawerOpen && touchY <= 56) {
+          isDragging = true;
+          hasDragged = false;
+          activeTarget = 'top-notif-pull';
+          startX = e.clientX;
+          startY = e.clientY;
+          currentDragX = 0;
+          currentDragY = 0;
+          notifModal.style.transition = 'none';
+          e.preventDefault();
+          return;
+        }
+
+        // If an arc is already open, dragging directly on the arc allows swiping it back or revolving!
+        if (arcLeft.classList.contains('open') && arcLeft.contains(e.target)) {
+          if (e.target.closest('.corner-round-notif-btn')) return;
+          isDragging = true;
+          activeTarget = 'arc-left';
+          startX = e.clientX; startY = e.clientY;
+          peakDragY = e.clientY;
+          currentDragX = 0; currentDragY = 0;
+          const rectArc = arcLeft.getBoundingClientRect();
+          const localX = e.clientX - rectArc.left;
+          const localY = e.clientY - rectArc.top;
+          arcStartTheta = Math.atan2(330 - localY, localX) * (180 / Math.PI);
+          arcBaseRevolver = revolverAngleLeft;
+          return;
+        }
+        if (arcRight.classList.contains('open') && arcRight.contains(e.target)) {
+          if (e.target.closest('.corner-round-notif-btn')) return;
+          isDragging = true;
+          activeTarget = 'arc-right';
+          startX = e.clientX; startY = e.clientY;
+          peakDragY = e.clientY;
+          currentDragX = 0; currentDragY = 0;
+          const rectArc = arcRight.getBoundingClientRect();
+          const localX = e.clientX - rectArc.left;
+          const localY = e.clientY - rectArc.top;
+          arcStartTheta = Math.atan2(330 - localY, 330 - localX) * (180 / Math.PI);
+          arcBaseRevolver = revolverAngleRight;
+          return;
+        }
+
+        // Bottom corners check: allows swiping up for quick settings even when in drawer mode!
+        stopKineticInertia();
+        kineticLastY = e.clientY;
+        kineticLastTime = performance.now();
+        kineticScrollVel = 0;
+
+        // Bottom corners & Bottom swipe handling
+        if (touchY >= rect.height - 88) {
+          if (touchX <= 88) {
+            isDragging = true;
+            activeTarget = 'corner-left';
+            startX = e.clientX; startY = e.clientY;
+            peakDragY = e.clientY;
+            currentDragX = 0; currentDragY = 0;
+            return;
+          } else if (touchX >= rect.width - 88) {
+            isDragging = true;
+            activeTarget = 'corner-right';
+            startX = e.clientX; startY = e.clientY;
+            peakDragY = e.clientY;
+            currentDragX = 0; currentDragY = 0;
+            return;
+          } else if (!drawerOpen && !arcLeft.classList.contains('open') && !arcRight.classList.contains('open')) {
+            isDragging = true;
+            hasDragged = false;
+            // From Home -> Stage 1: locks into Rails!
+            // From Rails -> Stage 2: swipes further into App Drawer!
+            activeTarget = railsOpen ? 'rails-to-drawer-swipe' : 'home-to-rails-swipe';
+            startX = e.clientX; startY = e.clientY;
+            currentDragX = 0; currentDragY = 0;
+            return;
+          } else if (drawerOpen) {
+            isDragging = true;
+            activeTarget = 'drawer-bottom-dismiss';
+            startX = e.clientX; startY = e.clientY;
+            currentDragX = 0; currentDragY = 0;
+            railLeft.style.transition = 'none';
+            railRight.style.transition = 'none';
+            drawerTopHandle.style.transition = 'none';
+            return;
+          }
+        }
+
+        // When Rails are open: dragging in the middle allows swiping up to App Drawer or down to Home
+        if (railsOpen && !drawerOpen && touchY >= rect.height * 0.35 && touchX > 88 && touchX < (rect.width - 88)) {
+          isDragging = true;
+          hasDragged = false;
+          activeTarget = 'rails-to-drawer-swipe';
+          startX = e.clientX; startY = e.clientY;
+          currentDragX = 0; currentDragY = 0;
+          return;
+        }
+
+        // In Drawer mode: Dragging anywhere else allows swiping down to Homepage, scrolling apps, or outward to separate rails
+        if (drawerOpen) {
+          isDragging = true;
+          activeTarget = touchX < (rect.width / 2) ? 'drawer-left' : 'drawer-right';
+          startX = e.clientX;
+          startY = e.clientY;
+          currentDragX = 0; currentDragY = 0;
+          railLeft.style.transition = 'none';
+          railRight.style.transition = 'none';
+          drawerTopHandle.style.transition = 'none';
+          return;
+        }
+
+        // Screen edge swipe inward to pop up rails when retracted
+        if (!railsOpen) {
+          if (touchX <= 40) {
+            isDragging = true;
+            activeTarget = 'edge-left';
+            startX = e.clientX; startY = e.clientY;
+            return;
+          } else if (touchX >= rect.width - 40) {
+            isDragging = true;
+            activeTarget = 'edge-right';
+            startX = e.clientX; startY = e.clientY;
+            return;
+          }
+        }
+      });
+
+      // 5) Arc Touch: Rotating Rotary Dial or Corner Retraction
+      arcLeft.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.corner-round-notif-btn')) return;
+        isDragging = true;
+        hasDragged = false;
+        isRevolving = false;
+        activeTarget = 'arc-left';
+        startX = e.clientX;
+        startY = e.clientY;
+        peakDragY = e.clientY;
+        currentDragX = 0;
+        currentDragY = 0;
+
+        const rect = arcLeft.getBoundingClientRect();
+        const localX = e.clientX - rect.left;
+        const localY = e.clientY - rect.top;
+        arcStartTheta = Math.atan2(330 - localY, localX) * (180 / Math.PI);
+        arcBaseRevolver = revolverAngleLeft;
+      });
+
+      arcRight.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.corner-round-notif-btn')) return;
+        isDragging = true;
+        hasDragged = false;
+        isRevolving = false;
+        activeTarget = 'arc-right';
+        startX = e.clientX;
+        startY = e.clientY;
+        peakDragY = e.clientY;
+        currentDragX = 0;
+        currentDragY = 0;
+
+        const rect = arcRight.getBoundingClientRect();
+        const localX = e.clientX - rect.left;
+        const localY = e.clientY - rect.top;
+        arcStartTheta = Math.atan2(330 - localY, 330 - localX) * (180 / Math.PI);
+        arcBaseRevolver = revolverAngleRight;
+      });
+
+      // Mouse wheel support for revolving dial
+      arcLeft.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        revolverAngleLeft += e.deltaY * 0.15;
+        renderPolarGrid(svgArcLeft, true);
+      }, { passive: false });
+
+      arcRight.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        revolverAngleRight += e.deltaY * 0.15;
+        renderPolarGrid(svgArcRight, false);
+      }, { passive: false });
+
+      
+      // ====================================================
+      // FREE-WHEEL KINETIC INERTIAL MOMENTUM ENGINE
+      // Silky mechanical horology glide for Rails & App Drawer
+      // ====================================================
+      let kineticLastY = 0;
+      let kineticLastTime = 0;
+      let kineticScrollVel = 0; // px / ms
+      let kineticRafId = null;
+
+      function stopKineticInertia() {
+        if (kineticRafId) {
+          cancelAnimationFrame(kineticRafId);
+          kineticRafId = null;
+        }
+        kineticScrollVel = 0;
+      }
+
+      function startKineticInertia(type, initialVelocity) {
+        stopKineticInertia();
+        let vel = Math.max(-28, Math.min(28, initialVelocity * 16.6)); // px/frame
+        const friction = 0.958; // silky watch rotor deceleration
+
+        function step() {
+          vel *= friction;
+          if (Math.abs(vel) < 0.2) {
+            stopKineticInertia();
+            return;
+          }
+
+          if (type === 'rail-left') {
+            loopScrollOffset += vel;
+            baseLoopOffset = loopScrollOffset;
+            renderConveyor();
+          } else if (type === 'rail-right') {
+            loopScrollOffset -= vel;
+            baseLoopOffset = loopScrollOffset;
+            renderConveyor();
+          } else if (type === 'drawer') {
+            const minScroll = -290;
+            const maxScroll = 0;
+            drawerScrollOffset += vel;
+            if (drawerScrollOffset > maxScroll) {
+              drawerScrollOffset = maxScroll;
+              stopKineticInertia();
+            } else if (drawerScrollOffset < minScroll) {
+              drawerScrollOffset = minScroll;
+              stopKineticInertia();
+            }
+            baseDrawerScrollOffset = drawerScrollOffset;
+            renderConveyor();
+          }
+          kineticRafId = requestAnimationFrame(step);
+        }
+        kineticRafId = requestAnimationFrame(step);
+      }
+
+      // Pointer Move
+      window.addEventListener('pointermove', (e) => {
+        if (!isDragging || !activeTarget) return;
+
+        currentDragX = e.clientX - startX;
+        currentDragY = e.clientY - startY;
+
+        if (Math.hypot(currentDragX, currentDragY) > 12) {
+          hasDragged = true;
+        }
+
+        // 1) Continuous Pull-Down for Notification Sheet (from top status bar)
+        if (activeTarget === 'top-notif-pull') {
+          notifModal.classList.add('open');
+          homeCanvas.classList.add('dimmed');
+          const screenH = screen.clientHeight || 748;
+          let currentY = -screenH + currentDragY;
+          if (currentY > 0) {
+            currentY = currentY * 0.22; // iOS rubber band downward
+          }
+          notifModal.style.transform = `translate3d(0, ${currentY.toFixed(1)}px, 0)`;
+          const progress = Math.max(0, Math.min(1, (screenH + currentY) / screenH));
+          notifModal.style.opacity = `${(0.2 + progress * 0.8).toFixed(2)}`;
+          return;
+        }
+
+        // 2) Continuous Push-Up / Pull-Down on Open Notification Sheet
+        if (activeTarget === 'notif-push-up') {
+          let currentY = currentDragY;
+          if (currentY > 0) {
+            currentY = currentY * 0.22; // iOS rubber band downward
+          }
+          notifModal.style.transform = `translate3d(0, ${currentY.toFixed(1)}px, 0)`;
+          const progress = Math.max(0, Math.min(1, (screenH + currentY) / screenH));
+          notifModal.style.opacity = `${(0.2 + progress * 0.8).toFixed(2)}`;
+          return;
+        }
+
+        // A) Drawer Mode Gestures (Swipe down to Homepage, scroll 40 apps, or swipe outward to separate rails)
+        if (activeTarget === 'drawer-top-handle' || activeTarget === 'drawer-left' || activeTarget === 'drawer-right' || activeTarget === 'drawer-bottom-dismiss') {
+          const absX = Math.abs(currentDragX);
+          const absY = Math.abs(currentDragY);
+
+          // 1. Swiping OUTWARD horizontally separates rails back to docked side rails
+          if ((activeTarget === 'drawer-left' && currentDragX < -35 && absX > absY * 1.3) ||
+              (activeTarget === 'drawer-right' && currentDragX > 35 && absX > absY * 1.3)) {
+            closeDrawer();
+            startX = e.clientX;
+            startY = e.clientY;
+            currentDragX = 0;
+            currentDragY = 0;
+            baseLoopOffset = loopScrollOffset;
+            activeTarget = activeTarget === 'drawer-left' ? 'rail-left' : 'rail-right';
+            return;
+          }
+
+          // 2. Direct downward drag on handle or bottom area: pulls entire drawer sheet down
+          if (activeTarget === 'drawer-top-handle' || activeTarget === 'drawer-bottom-dismiss') {
+            const dragDown = Math.max(0, currentDragY);
+            railLeft.style.transform = `translate3d(0, ${dragDown}px, 0)`;
+            railRight.style.transform = `translate3d(0, ${dragDown}px, 0)`;
+            drawerTopHandle.style.transform = `translateX(-50%) translate3d(0, ${dragDown}px, 0)`;
+            const revealProgress = Math.min(1, dragDown / 220);
+            homeCanvas.style.opacity = `${(0.35 + revealProgress * 0.65).toFixed(2)}`;
+            return;
+          }
+
+          // 3. In app grid:
+          const targetScroll = baseDrawerScrollOffset + currentDragY;
+
+          // If at the top of the app list and dragging DOWN -> pulls the entire drawer sheet down to Homepage!
+          if (targetScroll > 0) {
+            drawerScrollOffset = 0;
+            renderConveyor();
+            const dragDown = targetScroll;
+            railLeft.style.transform = `translate3d(0, ${dragDown}px, 0)`;
+            railRight.style.transform = `translate3d(0, ${dragDown}px, 0)`;
+            drawerTopHandle.style.transform = `translateX(-50%) translate3d(0, ${dragDown}px, 0)`;
+            const revealProgress = Math.min(1, dragDown / 220);
+            homeCanvas.style.opacity = `${(0.35 + revealProgress * 0.65).toFixed(2)}`;
+            return;
+          }
+
+          // Otherwise: Scrolling the 40 apps inside the drawer
+          railLeft.style.transform = '';
+          railRight.style.transform = '';
+          drawerTopHandle.style.transform = '';
+          homeCanvas.style.opacity = '';
+          const minScroll = -290;
+          const maxScroll = 0;
+          drawerScrollOffset = Math.max(minScroll, targetScroll);
+          renderConveyor();
+          return;
+        }
+
+        // B) Screen Edge when rails retracted: Swiping inward pops up rails
+        if (activeTarget === 'edge-left') {
+          if (currentDragX > 20) {
+            openBothRails();
+            startX = e.clientX;
+            startY = e.clientY;
+            currentDragX = 0;
+            currentDragY = 0;
+            baseLoopOffset = loopScrollOffset;
+            activeTarget = 'rail-left';
+            return;
+          }
+          return;
+        }
+
+        if (activeTarget === 'edge-right') {
+          if (currentDragX < -20) {
+            openBothRails();
+            startX = e.clientX;
+            startY = e.clientY;
+            currentDragX = 0;
+            currentDragY = 0;
+            baseLoopOffset = loopScrollOffset;
+            activeTarget = 'rail-right';
+            return;
+          }
+          return;
+        }
+
+        // Free-wheel velocity tracker
+        const nowTime = performance.now();
+        const dt = nowTime - kineticLastTime;
+        if (dt > 6) {
+          const dy = e.clientY - kineticLastY;
+          kineticScrollVel = kineticScrollVel * 0.35 + (dy / dt) * 0.65;
+          kineticLastY = e.clientY;
+          kineticLastTime = nowTime;
+        }
+
+        // STAGE 1: Home -> Swipe Up strictly LOCKS IN RAILS and terminates gesture!
+        if (activeTarget === 'home-to-rails-swipe') {
+          if (currentDragY < -26) {
+            openBothRails();
+            try { if (navigator.vibrate) navigator.vibrate(22); } catch(err) {}
+            showToast('Quick Tiles Locked');
+            isDragging = false;
+            activeTarget = null;
+            return;
+          }
+          return;
+        }
+
+        // STAGE 2: From Locked Rails -> Swipe further UP goes to Full App Drawer, or DOWN to Home
+        if (activeTarget === 'rails-to-drawer-swipe') {
+          if (currentDragY < -32) {
+            openDrawer();
+            try { if (navigator.vibrate) navigator.vibrate(26); } catch(err) {}
+            showToast('App Drawer');
+            isDragging = false;
+            activeTarget = null;
+            return;
+          } else if (currentDragY > 32) {
+            closeBothRails();
+            try { if (navigator.vibrate) navigator.vibrate(14); } catch(err) {}
+            triggerIsland('ButterOS', 'Home Page', SVG_ICONS.clock);
+            isDragging = false;
+            activeTarget = null;
+            return;
+          }
+          return;
+        }
+
+        // Continuous Corner & Arc Notification Gestures (Swipe UP to unfold, push DOWN to retract without lifting finger!)
+        if (activeTarget === 'corner-left') {
+          if (currentDragY < -18) {
+            openArcLeft();
+            activeTarget = 'arc-left';
+            peakDragY = e.clientY;
+            startX = e.clientX;
+            startY = e.clientY;
+            currentDragX = 0;
+            currentDragY = 0;
+            return;
+          }
+          return;
+        }
+
+        if (activeTarget === 'corner-right') {
+          if (currentDragY < -18) {
+            openArcRight();
+            activeTarget = 'arc-right';
+            peakDragY = e.clientY;
+            startX = e.clientX;
+            startY = e.clientY;
+            currentDragX = 0;
+            currentDragY = 0;
+            return;
+          }
+          return;
+        }
+
+        if (activeTarget === 'arc-left') {
+          const rect = arcLeft.getBoundingClientRect();
+          const localX = e.clientX - rect.left;
+          const localY = e.clientY - rect.top;
+          const currentTheta = Math.atan2(330 - localY, localX) * (180 / Math.PI);
+          const deltaTheta = currentTheta - arcStartTheta;
+          const distCorner = Math.hypot(localX, 330 - localY);
+
+          // If swiping toward the bottom-left corner with low theta and inward push, retract arc
+          if (!isRevolving && (distCorner < 55 || (currentDragY > 26 && currentDragX < 15))) {
+            closeArcLeft();
+            activeTarget = 'corner-left';
+            startX = e.clientX; startY = e.clientY;
+            currentDragX = 0; currentDragY = 0;
+            return;
+          }
+
+          // Otherwise, revolve the dial along the angular arc!
+          if (Math.abs(deltaTheta) > 1.5 || isRevolving) {
+            isRevolving = true;
+            hasDragged = true;
+            revolverAngleLeft = arcBaseRevolver + deltaTheta;
+            renderPolarGrid(svgArcLeft, true);
+          }
+          return;
+        }
+
+        if (activeTarget === 'arc-right') {
+          const rect = arcRight.getBoundingClientRect();
+          const localX = e.clientX - rect.left;
+          const localY = e.clientY - rect.top;
+          const currentTheta = Math.atan2(330 - localY, 330 - localX) * (180 / Math.PI);
+          const deltaTheta = currentTheta - arcStartTheta;
+          const distCorner = Math.hypot(330 - localX, 330 - localY);
+
+          if (!isRevolving && (distCorner < 55 || (currentDragY > 26 && currentDragX > -15))) {
+            closeArcRight();
+            activeTarget = 'corner-right';
+            startX = e.clientX; startY = e.clientY;
+            currentDragX = 0; currentDragY = 0;
+            return;
+          }
+
+          if (Math.abs(deltaTheta) > 1.5 || isRevolving) {
+            isRevolving = true;
+            hasDragged = true;
+            revolverAngleRight = arcBaseRevolver + deltaTheta;
+            renderPolarGrid(svgArcRight, false);
+          }
+          return;
+        }
+
+        // D) Rail Gestures:
+        const absX = Math.abs(currentDragX);
+        const absY = Math.abs(currentDragY);
+
+        // Dedicated smooth bi-directional vertical conveyor scrolling
+
+        // 3. Vertical conveyor scrolling (Single Continuous Belt Loop across Both Rails)
+        const delta = currentDragY;
+        if (activeTarget === 'rail-left') {
+          loopScrollOffset = baseLoopOffset + delta;
+        } else if (activeTarget === 'rail-right') {
+          loopScrollOffset = baseLoopOffset - delta;
+        }
+        renderConveyor();
+      });
+
+      // Pointer Up
+      window.addEventListener('pointerup', endDrag);
+      window.addEventListener('pointercancel', endDrag);
+
+      function endDrag(e) {
+        if (!isDragging) return;
+
+        // Pull down from Top Status Bar for Notifications
+        if (activeTarget === 'top-notif-pull') {
+          if (currentDragY > 80 || (!hasDragged && Math.abs(currentDragY) < 15)) {
+            openNotifModal();
+          } else {
+            closeNotifModal();
+          }
+          isDragging = false;
+          activeTarget = null;
+          return;
+        }
+
+        // Push-Up / Pull-Down release on Open Notification Sheet
+        if (activeTarget === 'notif-push-up') {
+          if (currentDragY < -45) {
+            closeNotifModal();
+          } else {
+            openNotifModal();
+          }
+          isDragging = false;
+          activeTarget = null;
+          return;
+        }
+
+        // Free-wheel momentum release on Rails (Clean termination & zero touch lockups)
+        if (activeTarget === 'rail-left' || activeTarget === 'rail-right') {
+          if (Math.abs(kineticScrollVel) > 0.12) {
+            startKineticInertia(activeTarget, kineticScrollVel);
+          }
+          isDragging = false;
+          activeTarget = null;
+          return;
+        }
+
+        // Release handling for App Drawer
+        if (activeTarget === 'drawer-top-handle' || activeTarget === 'drawer-left' || activeTarget === 'drawer-right' || activeTarget === 'drawer-bottom-dismiss') {
+          // Free-wheel momentum release on App Drawer grid
+          if ((activeTarget === 'drawer-left' || activeTarget === 'drawer-right') && Math.abs(kineticScrollVel) > 0.12) {
+            startKineticInertia('drawer', kineticScrollVel);
+          }
+          const dragDown = (baseDrawerScrollOffset + currentDragY) > 0 ? (baseDrawerScrollOffset + currentDragY) : currentDragY;
+
+          // If pulled down past threshold (35px) or tapped on handle -> dismiss directly to clean Home Page!
+          if (dragDown > 35 || (!hasDragged && activeTarget === 'drawer-top-handle' && Math.abs(currentDragY) < 15 && Math.abs(currentDragX) < 15)) {
+            dismissDrawerToHome(true);
+            isDragging = false;
+            activeTarget = null;
+            return;
+          }
+
+          // If pulled down only slightly, spring smoothly back up into open drawer
+          railLeft.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+          railRight.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+          drawerTopHandle.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)';
+          railLeft.style.transform = '';
+          railRight.style.transform = '';
+          drawerTopHandle.style.transform = '';
+          homeCanvas.style.opacity = '';
+
+          setTimeout(() => {
+            railLeft.style.transition = '';
+            railRight.style.transition = '';
+            drawerTopHandle.style.transition = '';
+          }, 220);
+
+          // Snap drawer app scroll back within bounds
+          const minScroll = -290;
+          const maxScroll = 0;
+          if (drawerScrollOffset > maxScroll) drawerScrollOffset = maxScroll;
+          else if (drawerScrollOffset < minScroll) drawerScrollOffset = minScroll;
+          baseDrawerScrollOffset = drawerScrollOffset;
+          renderConveyor();
+
+          isDragging = false;
+          activeTarget = null;
+          return;
+        }
+
+        // Dismiss arc if flicked downward without revolving
+        if (activeTarget === 'arc-left') {
+          if (!isRevolving) {
+            const pushBackY = (e && peakDragY) ? (e.clientY - peakDragY) : currentDragY;
+            if (currentDragY > 12 || pushBackY > 15) {
+              closeArcLeft();
+            }
+          }
+          isRevolving = false;
+        } else if (activeTarget === 'arc-right') {
+          if (!isRevolving) {
+            const pushBackY = (e && peakDragY) ? (e.clientY - peakDragY) : currentDragY;
+            if (currentDragY > 12 || pushBackY > 15) {
+              closeArcRight();
+            }
+          }
+          isRevolving = false;
+        }
+
+        // Tap on corner opens radial settings
+        if (activeTarget === 'corner-left' && Math.abs(currentDragY) < 10 && Math.abs(currentDragX) < 10) {
+          toggleArcLeft();
+        } else if (activeTarget === 'corner-right' && Math.abs(currentDragY) < 10 && Math.abs(currentDragX) < 10) {
+          toggleArcRight();
+        }
+
+        isDragging = false;
+        activeTarget = null;
+        isRevolving = false;
+      }
+
+      // ====================================================
+      // DRAWER CONTROLS (Rails Themselves Morph into Centered Grid)
+      // ====================================================
+      function openDrawer() {
+        if (drawerOpen) return;
+        drawerOpen = true;
+        railsOpen = true;
+        drawerScrollOffset = 0;
+        baseDrawerScrollOffset = 0;
+        railLeft.style.transform = '';
+        railRight.style.transform = '';
+        railLeft.style.transition = '';
+        railRight.style.transition = '';
+        drawerTopHandle.style.transform = '';
+        drawerTopHandle.style.transition = '';
+        railLeft.classList.remove('retracted');
+        railRight.classList.remove('retracted');
+        screen.classList.add('rails-active');
+        screen.classList.add('drawer-mode');
+
+        // Close other panels
+        closeArcLeft();
+        closeArcRight();
+        closeNotifModal();
+        homeCanvas.classList.add('dimmed');
+
+        renderConveyor();
+      }
+
+      function closeDrawer() {
+        if (!drawerOpen) return;
+        drawerOpen = false;
+        drawerScrollOffset = 0;
+        baseDrawerScrollOffset = 0;
+        screen.classList.remove('drawer-mode');
+        const topHandle = document.getElementById('drawerTopHandle');
+        if (topHandle) {
+          topHandle.style.opacity = '';
+          topHandle.style.pointerEvents = '';
+        }
+        railLeft.style.transform = '';
+        railRight.style.transform = '';
+        railLeft.style.transition = '';
+        railRight.style.transition = '';
+        drawerTopHandle.style.transform = '';
+        drawerTopHandle.style.transition = '';
+
+        if (railsOpen) {
+          homeCanvas.classList.add('dimmed');
+        } else {
+          homeCanvas.classList.remove('dimmed');
+        }
+
+        renderConveyor();
+      }
+
+      function dismissDrawerToHome(animated = true) {
+        if (!drawerOpen) return;
+
+        const performSilentCleanup = () => {
+          // 1. Freeze transitions & suppress opacity to eliminate any rendering glitch
+          railLeft.style.transition = 'none';
+          railRight.style.transition = 'none';
+          drawerTopHandle.style.transition = 'none';
+          railLeft.style.opacity = '0';
+          railRight.style.opacity = '0';
+
+          // 2. Reset drawer states and classes to retracted rails
+          drawerOpen = false;
+          railsOpen = false;
+          drawerScrollOffset = 0;
+          baseDrawerScrollOffset = 0;
+          screen.classList.remove('drawer-mode');
+          screen.classList.remove('rails-active');
+          railLeft.classList.add('retracted');
+          railRight.classList.add('retracted');
+
+          // 3. Clear inline transforms
+          railLeft.style.transform = '';
+          railRight.style.transform = '';
+          drawerTopHandle.style.transform = '';
+
+          // 4. Reset drawer handle and canvas dimming
+          const topHandle = document.getElementById('drawerTopHandle');
+          if (topHandle) {
+            topHandle.style.opacity = '';
+            topHandle.style.pointerEvents = '';
+          }
+          homeCanvas.style.transition = '';
+          homeCanvas.style.opacity = '';
+          homeCanvas.classList.remove('dimmed');
+
+          // 5. Re-render conveyor so slots are reset
+          renderConveyor();
+
+          // 6. Force reflow to commit retracted state off-screen without animation
+          void railLeft.offsetWidth;
+          void railRight.offsetWidth;
+
+          // 7. Restore transitions and opacity cleanly on next frame
+          requestAnimationFrame(() => {
+            railLeft.style.transition = '';
+            railRight.style.transition = '';
+            drawerTopHandle.style.transition = '';
+            railLeft.style.opacity = '';
+            railRight.style.opacity = '';
+          });
+        };
+
+        if (animated) {
+          railLeft.style.transition = 'transform 0.26s cubic-bezier(0.16, 1, 0.3, 1)';
+          railRight.style.transition = 'transform 0.26s cubic-bezier(0.16, 1, 0.3, 1)';
+          drawerTopHandle.style.transition = 'transform 0.26s cubic-bezier(0.16, 1, 0.3, 1)';
+          railLeft.style.transform = 'translate3d(0, 750px, 0)';
+          railRight.style.transform = 'translate3d(0, 750px, 0)';
+          drawerTopHandle.style.transform = 'translateX(-50%) translate3d(0, 750px, 0)';
+          homeCanvas.style.transition = 'opacity 0.26s ease';
+          homeCanvas.style.opacity = '1';
+          triggerIsland('ButterOS', 'Home Page', SVG_ICONS.clock);
+
+          setTimeout(performSilentCleanup, 260);
+        } else {
+          performSilentCleanup();
+          triggerIsland('ButterOS', 'Home Page', SVG_ICONS.clock);
+        }
+      }
+
+      function toggleDrawer() {
+        if (drawerOpen) dismissDrawerToHome(true);
+        else openDrawer();
+      }
+
+      document.getElementById('btnOpenDrawer').onclick = toggleDrawer;
+
+      // Mouse wheel support for scrolling inside App Drawer
+      function handleDrawerWheel(e) {
+        if (!drawerOpen) return;
+        e.preventDefault();
+        const minScroll = -290;
+        const maxScroll = 0;
+        drawerScrollOffset = Math.max(minScroll, Math.min(maxScroll, drawerScrollOffset - e.deltaY * 0.7));
+        baseDrawerScrollOffset = drawerScrollOffset;
+        renderConveyor();
+      }
+      railLeft.addEventListener('wheel', handleDrawerWheel, { passive: false });
+      railRight.addEventListener('wheel', handleDrawerWheel, { passive: false });
+
+      // ====================================================
+      // RAILS CONTROLS (Retract & Pop Up - Zero Navigation Toasts)
+      // ====================================================
+      function openBothRails() {
+        railsOpen = true;
+        screen.classList.add('rails-active');
+        railLeft.classList.remove('retracted');
+        railRight.classList.remove('retracted');
+        homeCanvas.classList.add('dimmed');
+      }
+
+      function closeBothRails() {
+        railsOpen = false;
+        screen.classList.remove('rails-active');
+        railLeft.classList.add('retracted');
+        railRight.classList.add('retracted');
+        homeCanvas.classList.remove('dimmed');
+      }
+
+      function toggleBothRails() {
+        if (railsOpen) closeBothRails();
+        else openBothRails();
+      }
+
+      document.getElementById('btnToggleRails').onclick = toggleBothRails;
+      guideLeft.addEventListener('click', openBothRails);
+      guideRight.addEventListener('click', openBothRails);
+
+      // ====================================================
+
+      // ====================================================
+      // BORDERLESS 3D SPATIAL NOTIFICATION DECK CONTROLLER
+      // (Vertical 3D Rolodex Flip Stack [Android Lollipop/Nougat Recents Style] + 2-Second Auto-Flip)
+      // ====================================================
+      const spatialNotifDeck = document.getElementById('spatialNotifDeck');
+      const spatialDeckTrack = document.getElementById('spatialDeckTrack');
+      const spatialDeckIndicators = document.getElementById('spatialDeckIndicators');
+      let spatialActiveIndex = 0;
+      let spatialDeckVisible = false;
+      let spatialAutoSlideTimer = null;
+      let spatialSlideStartTime = 0;
+      let isDeckUserInteracting = false;
+      let is3DCarouselDragging = false;
+      let isGestureSwipeMode = false;
+      let lastGestureDy = 0;
+      const SPATIAL_SLIDE_DURATION = 2000; // Auto-flips every 2.0 seconds
+
+      function startSpatialAutoSlide() {
+        stopSpatialAutoSlide();
+        if (!spatialDeckVisible || isDeckUserInteracting) return;
+        const visibleCount = BUTTEROS_NOTIFS.filter(n => !n.blocked).length;
+        if (visibleCount <= 1) return;
+
+        spatialSlideStartTime = performance.now();
+
+        function tick(now) {
+          if (!spatialDeckVisible || isDeckUserInteracting) return;
+          const elapsed = now - spatialSlideStartTime;
+
+          if (elapsed >= SPATIAL_SLIDE_DURATION) {
+            advanceSpatialCard(1, true); // Smooth vertical 3D Rolodex flip!
+          } else {
+            spatialAutoSlideTimer = requestAnimationFrame(tick);
+          }
+        }
+
+        spatialAutoSlideTimer = requestAnimationFrame(tick);
+      }
+
+      function stopSpatialAutoSlide() {
+        if (spatialAutoSlideTimer) {
+          cancelAnimationFrame(spatialAutoSlideTimer);
+          spatialAutoSlideTimer = null;
+        }
+      }
+
+      // Minimal pagination indicators:
+      // If <= 3 notifications: show exact number of small dots
+      // If > 3 notifications: show exactly 3 dots and one horizontal line
+      function renderSpatialIndicators() {
+        if (!spatialDeckIndicators) return;
+        spatialDeckIndicators.innerHTML = '';
+
+        const visibleNotifs = BUTTEROS_NOTIFS.filter(n => !n.blocked);
+        const count = visibleNotifs.length;
+        if (count === 0) return;
+
+        if (count <= 3) {
+          for (let i = 0; i < count; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'spatial-indicator-item' + (i === spatialActiveIndex ? ' is-active' : '');
+            btn.title = `Notification ${i + 1}`;
+            btn.innerHTML = '<span class="spatial-indicator-dot"></span>';
+            const targetIdx = i;
+            btn.onclick = (e) => {
+              e.stopPropagation();
+              jumpToSpatialCard(targetIdx);
+            };
+            spatialDeckIndicators.appendChild(btn);
+          }
+        } else {
+          // Exactly 3 dots
+          for (let i = 0; i < 3; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'spatial-indicator-item' + (i === spatialActiveIndex ? ' is-active' : '');
+            btn.title = `Notification ${i + 1}`;
+            btn.innerHTML = '<span class="spatial-indicator-dot"></span>';
+            const targetIdx = i;
+            btn.onclick = (e) => {
+              e.stopPropagation();
+              jumpToSpatialCard(targetIdx);
+            };
+            spatialDeckIndicators.appendChild(btn);
+          }
+
+          // And one horizontal line for overflow (4th, 5th, etc.)
+          const lineBtn = document.createElement('button');
+          lineBtn.className = 'spatial-indicator-item' + (spatialActiveIndex >= 3 ? ' is-active' : '');
+          lineBtn.title = 'More notifications';
+          lineBtn.innerHTML = '<span class="spatial-indicator-line"></span>';
+          lineBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (spatialActiveIndex < 3) {
+              jumpToSpatialCard(3);
+            } else {
+              const nextIdx = (spatialActiveIndex + 1) % count;
+              jumpToSpatialCard(nextIdx < 3 ? 3 : nextIdx);
+            }
+          };
+          spatialDeckIndicators.appendChild(lineBtn);
+        }
+      }
+
+      function updateActiveIndicator() {
+        if (!spatialDeckIndicators) return;
+        const visibleNotifs = BUTTEROS_NOTIFS.filter(n => !n.blocked);
+        const count = visibleNotifs.length;
+        if (count === 0) {
+          spatialDeckIndicators.innerHTML = '';
+          return;
+        }
+
+        const items = spatialDeckIndicators.querySelectorAll('.spatial-indicator-item');
+        if (count <= 3) {
+          items.forEach((item, i) => {
+            item.classList.toggle('is-active', i === spatialActiveIndex);
+          });
+        } else {
+          items.forEach((item, i) => {
+            if (i < 3) {
+              item.classList.toggle('is-active', i === spatialActiveIndex);
+            } else {
+              item.classList.toggle('is-active', spatialActiveIndex >= 3);
+            }
+          });
+        }
+      }
+
+      function jumpToSpatialCard(targetIdx) {
+        const visibleCount = BUTTEROS_NOTIFS.filter(n => !n.blocked).length;
+        if (visibleCount <= 1 || targetIdx === spatialActiveIndex) return;
+        spatialActiveIndex = targetIdx;
+        animateToActiveCard(0.48);
+        updateActiveIndicator();
+        startSpatialAutoSlide();
+      }
+
+      // Vertical 3D Rolodex Flip Stack Kinematics (Classic Android Lollipop/Nougat Recents)
+      function updateCardTransformsRolodex(dragOffsetY = 0, isAnimated = false, durationSec = 0.48) {
+        if (!spatialDeckTrack) return;
+        const cards = spatialDeckTrack.querySelectorAll('.spatial-card');
+        const N = cards.length;
+        if (N === 0) return;
+
+        // Swiping UP (dragOffsetY < 0) advances forward to next card
+        // Swiping DOWN (dragOffsetY > 0) retreats to previous card
+        const virtualPos = spatialActiveIndex - (dragOffsetY / 135);
+
+        cards.forEach((card, idx) => {
+          if (isAnimated) {
+            card.style.transition = `transform ${durationSec}s cubic-bezier(0.16, 1, 0.3, 1), opacity ${durationSec}s cubic-bezier(0.16, 1, 0.3, 1)`;
+          } else {
+            card.style.transition = 'none';
+          }
+
+          let rel = idx - virtualPos;
+          if (N > 1) {
+            while (rel > N / 2) rel -= N;
+            while (rel < -N / 2) rel += N;
+          }
+
+          let ty, tz, rotX, scale, opacity, zIndex;
+
+          if (rel >= 0) {
+            // Active front card and cards stacked behind in 3D perspective
+            ty = -rel * 26; // Cascading upward into top view
+            tz = -Math.min(220, rel * 62); // Receding along Z-axis
+            rotX = Math.min(32, rel * 15); // Tilting backward
+            scale = Math.max(0.82, 1 - rel * 0.055);
+            opacity = Math.max(0, 1 - rel * 0.36);
+            zIndex = Math.round(20 - rel * 2);
+          } else {
+            // Exiting card peeling forward/downward
+            ty = rel * 88; // Dropping downward
+            tz = Math.min(100, Math.abs(rel) * 45); // Moving forward towards viewer
+            rotX = -rel * 32; // Tilting forward as it peels off
+            scale = Math.max(0.85, 1 - Math.abs(rel) * 0.08);
+            opacity = Math.max(0, 1 - Math.abs(rel) * 1.35);
+            zIndex = Math.round(20 - Math.abs(rel) * 2);
+          }
+
+          card.style.transform = `translate3d(0, ${ty.toFixed(1)}px, ${tz.toFixed(1)}px) rotateX(${rotX.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
+          card.style.opacity = opacity.toFixed(2);
+          card.style.zIndex = zIndex;
+          card.style.pointerEvents = Math.abs(rel) < 0.35 ? 'auto' : 'none';
+        });
+      }
+
+      function animateToActiveCard(durationSec = 0.48) {
+        updateCardTransformsRolodex(0, true, durationSec);
+      }
+
+      function advanceSpatialCard(dir = 1, asRolodex = true) {
+        const visibleCount = BUTTEROS_NOTIFS.filter(n => !n.blocked).length;
+        if (visibleCount <= 1) return;
+
+        spatialActiveIndex = (spatialActiveIndex + dir + visibleCount) % visibleCount;
+        updateActiveIndicator();
+        animateToActiveCard(0.48);
+        startSpatialAutoSlide();
+      }
+
+      function renderSpatialDeck() {
+        if (!spatialDeckTrack) return;
+        spatialDeckTrack.innerHTML = '';
+
+        const visibleNotifs = BUTTEROS_NOTIFS.filter(n => !n.blocked);
+        if (visibleNotifs.length === 0) {
+          stopSpatialAutoSlide();
+          if (spatialDeckIndicators) spatialDeckIndicators.innerHTML = '';
+          spatialDeckTrack.innerHTML = `
+            <div class="spatial-card" style="text-align: center; justify-content: center; align-items: center; padding: 20px;">
+              <div style="font-size: 12px; font-weight: 700; color: var(--accent);">✓ All Caught Up</div>
+              <div style="font-size: 10px; color: var(--text-dim); margin-top: 4px;">Zero unread notifications</div>
+            </div>
+          `;
+          return;
+        }
+
+        if (spatialActiveIndex >= visibleNotifs.length) {
+          spatialActiveIndex = Math.max(0, visibleNotifs.length - 1);
+        }
+
+        visibleNotifs.forEach((notif, idx) => {
+          const card = document.createElement('div');
+          card.className = 'spatial-card' + (idx === spatialActiveIndex ? ' is-active' : '');
+
+          let iconSvg = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>';
+          if (notif.app === 'Terminal') {
+            iconSvg = '<svg viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>';
+          } else if (notif.app === 'Messages') {
+            iconSvg = '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+          } else if (notif.app === 'System') {
+            iconSvg = '<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>';
+          } else if (notif.app === 'Git') {
+            iconSvg = '<svg viewBox="0 0 24 24"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/></svg>';
+          }
+
+          card.innerHTML = `
+            <div class="spatial-card-header">
+              <div class="spatial-card-app">
+                <span class="spatial-card-app-icon">${iconSvg}</span>
+                <span class="spatial-card-app-name">${notif.app}</span>
+              </div>
+              <div class="spatial-card-meta">
+                <span class="spatial-card-time">${notif.time}</span>
+                <button class="spatial-card-dismiss-btn btn-dsm" title="Dismiss">✕</button>
+              </div>
+            </div>
+            <div class="spatial-card-content">
+              <div class="spatial-card-title">${notif.title}</div>
+              <div class="spatial-card-body">${notif.body}</div>
+            </div>
+            <div class="spatial-card-footer">
+              <div class="spatial-card-actions">
+                <button class="spatial-card-chip btn-act">${notif.actionLabel}</button>
+              </div>
+            </div>
+          `;
+
+          // Card click
+          card.onclick = (e) => {
+            e.stopPropagation();
+            if (isGestureSwipeMode || Math.abs(lastGestureDy) > 8) return;
+            if (idx !== spatialActiveIndex) {
+              jumpToSpatialCard(idx);
+            } else {
+              triggerIsland(notif.app, notif.title, iconSvg);
+            }
+          };
+
+          // Action button
+          const actBtn = card.querySelector('.btn-act');
+          if (actBtn) {
+            actBtn.onclick = (e) => {
+              e.stopPropagation();
+              triggerIsland(notif.app, `${notif.actionLabel}ing...`, iconSvg);
+              setTimeout(() => {
+                notif.blocked = true;
+                renderSpatialDeck();
+                renderNotifications();
+                startSpatialAutoSlide();
+              }, 400);
+            };
+          }
+
+          // Dismiss button
+          const dsmBtn = card.querySelector('.btn-dsm');
+          if (dsmBtn) {
+            dsmBtn.onclick = (e) => {
+              e.stopPropagation();
+              notif.blocked = true;
+              renderSpatialDeck();
+              renderNotifications();
+              startSpatialAutoSlide();
+              triggerIsland('Notification', `${notif.app} dismissed`);
+            };
+          }
+
+          spatialDeckTrack.appendChild(card);
+        });
+
+        renderSpatialIndicators();
+        animateToActiveCard(0);
+      }
+
+      function openSpatialNotifDeck(side) {
+        if (!spatialNotifDeck) return;
+        spatialDeckVisible = true;
+        renderSpatialDeck();
+        requestAnimationFrame(() => {
+          spatialNotifDeck.classList.add('is-visible');
+          startSpatialAutoSlide();
+        });
+      }
+
+      function closeSpatialNotifDeck() {
+        if (!spatialNotifDeck) return;
+        spatialDeckVisible = false;
+        stopSpatialAutoSlide();
+        spatialNotifDeck.classList.remove('is-visible');
+      }
+
+      // Responsive Vertical 3D Rolodex Swiping (Pointer + Touch + Wheel)
+      if (spatialNotifDeck) {
+        let gestureStartX = 0;
+        let gestureStartY = 0;
+        
+      // Tap-to-dismiss & 2-Stage Gesture (Home -> Rails with Haptic Detent -> Full App Drawer)
+      let tapTrackStartX = 0;
+      let tapTrackStartY = 0;
+      let tapTrackStartTime = 0;
+      let stagedGestureDetentHit = false;
+      let stagedGestureDetentTime = 0;
+      let isPointerActive = false;
+        let activePointerId = null;
+        let resumeAutoSlideTimer = null;
+
+        function startGesture(clientX, clientY, pId = null) {
+          if (resumeAutoSlideTimer) {
+            clearTimeout(resumeAutoSlideTimer);
+            resumeAutoSlideTimer = null;
+          }
+          isPointerActive = true;
+          isGestureSwipeMode = false;
+          gestureStartX = clientX;
+          gestureStartY = clientY;
+          lastGestureDy = 0;
+          activePointerId = pId;
+          isDeckUserInteracting = true;
+          stopSpatialAutoSlide();
+        }
+
+        function moveGesture(clientX, clientY, e) {
+          if (!isPointerActive || !spatialDeckVisible) return;
+          const dx = clientX - gestureStartX;
+          const dy = clientY - gestureStartY;
+
+          if (!isGestureSwipeMode) {
+            if (Math.abs(dy) > 5 && Math.abs(dy) > Math.abs(dx)) {
+              isGestureSwipeMode = true;
+              is3DCarouselDragging = true;
+            } else if (Math.abs(dx) > 14) {
+              isPointerActive = false;
+              is3DCarouselDragging = false;
+              return;
+            }
+          }
+
+          if (isGestureSwipeMode) {
+            if (e && e.cancelable) e.preventDefault();
+            lastGestureDy = dy;
+            updateCardTransformsRolodex(dy, false);
+          }
+        }
+
+        function endGesture() {
+          if (!isPointerActive) return;
+          isPointerActive = false;
+
+          const visibleCount = BUTTEROS_NOTIFS.filter(n => !n.blocked).length;
+          if (isGestureSwipeMode && visibleCount > 1) {
+            const threshold = 30;
+            if (lastGestureDy < -threshold) {
+              // Swiped UP -> flip forward to next card
+              spatialActiveIndex = (spatialActiveIndex + 1) % visibleCount;
+            } else if (lastGestureDy > threshold) {
+              // Swiped DOWN -> flip backward to previous card
+              spatialActiveIndex = (spatialActiveIndex - 1 + visibleCount) % visibleCount;
+            }
+            animateToActiveCard(0.48);
+            updateActiveIndicator();
+          } else {
+            animateToActiveCard(0.32);
+          }
+
+          if (resumeAutoSlideTimer) clearTimeout(resumeAutoSlideTimer);
+          resumeAutoSlideTimer = setTimeout(() => {
+            isGestureSwipeMode = false;
+            is3DCarouselDragging = false;
+            isDeckUserInteracting = false;
+            if (spatialDeckVisible) {
+              startSpatialAutoSlide();
+            }
+          }, 1200);
+        }
+
+        function cancelGesture() {
+          if (!isPointerActive) return;
+          isPointerActive = false;
+          isGestureSwipeMode = false;
+          is3DCarouselDragging = false;
+          animateToActiveCard(0.32);
+          if (resumeAutoSlideTimer) clearTimeout(resumeAutoSlideTimer);
+          resumeAutoSlideTimer = setTimeout(() => {
+            isDeckUserInteracting = false;
+            if (spatialDeckVisible) startSpatialAutoSlide();
+          }, 800);
+        }
+
+        // Pointer Events (with setPointerCapture and stopPropagation)
+        spatialNotifDeck.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          if (e.target.closest('.btn-act') || e.target.closest('.btn-dsm') || e.target.closest('.spatial-indicator-item')) {
+            return;
+          }
+          try { spatialNotifDeck.setPointerCapture(e.pointerId); } catch(err) {}
+          startGesture(e.clientX, e.clientY, e.pointerId);
+        });
+
+        spatialNotifDeck.addEventListener('pointermove', (e) => {
+          e.stopPropagation();
+          moveGesture(e.clientX, e.clientY, e);
+        });
+
+        spatialNotifDeck.addEventListener('pointerup', (e) => {
+          e.stopPropagation();
+          try { spatialNotifDeck.releasePointerCapture(e.pointerId); } catch(err) {}
+          endGesture();
+        });
+
+        spatialNotifDeck.addEventListener('pointercancel', (e) => {
+          e.stopPropagation();
+          try { spatialNotifDeck.releasePointerCapture(e.pointerId); } catch(err) {}
+          cancelGesture();
+        });
+
+        // Touch events fallback only for legacy browsers lacking PointerEvent
+        if (!window.PointerEvent) {
+          spatialNotifDeck.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            if (e.touches.length === 1) {
+              const t = e.touches[0];
+              startGesture(t.clientX, t.clientY);
+            }
+          }, { passive: true });
+
+          spatialNotifDeck.addEventListener('touchmove', (e) => {
+            e.stopPropagation();
+            if (e.touches.length === 1) {
+              const t = e.touches[0];
+              moveGesture(t.clientX, t.clientY, e);
+            }
+          }, { passive: false });
+
+          spatialNotifDeck.addEventListener('touchend', (e) => {
+            e.stopPropagation();
+            endGesture();
+          }, { passive: true });
+
+          spatialNotifDeck.addEventListener('touchcancel', (e) => {
+            e.stopPropagation();
+            cancelGesture();
+          }, { passive: true });
+        }
+
+        // Wheel event
+        spatialNotifDeck.addEventListener('wheel', (e) => {
+          e.stopPropagation();
+          const visibleCount = BUTTEROS_NOTIFS.filter(n => !n.blocked).length;
+          if (visibleCount <= 1) return;
+          isDeckUserInteracting = true;
+          stopSpatialAutoSlide();
+          if (e.deltaY > 10 || e.deltaX > 10) {
+            advanceSpatialCard(1, true);
+          } else if (e.deltaY < -10 || e.deltaX < -10) {
+            advanceSpatialCard(-1, true);
+          }
+          setTimeout(() => {
+            isDeckUserInteracting = false;
+            if (spatialDeckVisible) {
+              startSpatialAutoSlide();
+            }
+          }, 800);
+        }, { passive: false });
+
+        spatialNotifDeck.addEventListener('mouseenter', () => {
+          isDeckUserInteracting = true;
+          stopSpatialAutoSlide();
+        });
+
+        spatialNotifDeck.addEventListener('mouseleave', () => {
+          if (!isPointerActive) {
+            isDeckUserInteracting = false;
+            if (spatialDeckVisible) {
+              startSpatialAutoSlide();
+            }
+          }
+        });
+      }
+
+      // QUARTER-CIRCLE ARCS
+      // ====================================================
+      function openArcLeft() {
+        closeArcRight();
+        arcOpenedTimestamp = Date.now();
+        closeNotifModal();
+        arcLeft.classList.add('open');
+        homeCanvas.classList.add('dimmed');
+        openSpatialNotifDeck('right');
+      }
+
+      function closeArcLeft(e) {
+        if (e) e.stopPropagation();
+        arcLeft.classList.remove('open');
+        if (!arcRight.classList.contains('open')) {
+          closeSpatialNotifDeck();
+        }
+        if (!arcRight.classList.contains('open') && !drawerOpen && !railsOpen) {
+          homeCanvas.classList.remove('dimmed');
+        }
+      }
+
+      function toggleArcLeft() {
+        if (arcLeft.classList.contains('open')) closeArcLeft();
+        else openArcLeft();
+      }
+
+      function openArcRight() {
+        closeArcLeft();
+        arcOpenedTimestamp = Date.now();
+        closeNotifModal();
+        arcRight.classList.add('open');
+        homeCanvas.classList.add('dimmed');
+        openSpatialNotifDeck('left');
+      }
+
+      function closeArcRight(e) {
+        if (e) e.stopPropagation();
+        arcRight.classList.remove('open');
+        if (!arcLeft.classList.contains('open')) {
+          closeSpatialNotifDeck();
+        }
+        if (!arcLeft.classList.contains('open') && !drawerOpen && !railsOpen) {
+          homeCanvas.classList.remove('dimmed');
+        }
+      }
+
+      function toggleArcRight() {
+        if (arcRight.classList.contains('open')) closeArcRight();
+        else openArcRight();
+      }
+
+      document.getElementById('btnOpenArcLeft').onclick = toggleArcLeft;
+      document.getElementById('btnOpenArcRight').onclick = toggleArcRight;
+
+      // Close panels on background tap or return to home page
+      screen.addEventListener('click', (e) => {
+        // Prevent accidental dismiss immediately after gesture opens arc or notification center
+        if (Date.now() - arcOpenedTimestamp < 650) return;
+        if (Date.now() - notifOpenedTimestamp < 650) return;
+
+        // If a drag/swipe gesture just finished, do not treat as click
+        if (hasDragged) {
+          hasDragged = false;
+          return;
+        }
+
+        if (e.target.closest && (
+          e.target.closest('.corner-round-notif-btn') || 
+          e.target.closest('#btnOpenNotifs') ||
+          e.target.closest('.quarter-circle-arc') ||
+          e.target.closest('.corner-hover-indicator') ||
+          e.target.closest('#spatialNotifDeck') ||
+          e.target.closest('.spatial-notif-deck')
+        )) {
+          return;
+        }
+
+        if (notifModal.classList.contains('open') && !notifModal.contains(e.target) && e.target.id !== 'btnOpenNotifs') {
+          closeNotifModal();
+          return;
+        }
+        if (arcLeft.classList.contains('open') && !arcLeft.contains(e.target) && !cornerIndicatorLeft.contains(e.target) && e.target.id !== 'btnOpenArcLeft') {
+          closeArcLeft();
+          return;
+        }
+        if (arcRight.classList.contains('open') && !arcRight.contains(e.target) && !cornerIndicatorRight.contains(e.target) && e.target.id !== 'btnOpenArcRight') {
+          closeArcRight();
+          return;
+        }
+        if (drawerOpen) {
+          if (!railLeft.contains(e.target) && !railRight.contains(e.target) && e.target.id !== 'btnOpenDrawer') {
+            dismissDrawerToHome(true);
+            return;
+          }
+        }
+
+        // When in rails: clicking in the middle goes back to home page
+        if (railsOpen && !drawerOpen) {
+          const rect = screen.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const clickY = e.clientY - rect.top;
+
+          // Middle area between left rail (0..76px) and right rail (width-76px..width)
+          if (clickX >= 76 && clickX <= (rect.width - 76) && clickY > 24) {
+            closeBothRails();
+          }
+        }
+      });
+
+      
+      // ====================================================
+      // MASTER ZERO-LATENCY TAP-TO-DISMISS ENGINE
+      // Tapping any blank screen area cleanly dismisses all panels to home
+      // ====================================================
+      let masterTapDownTime = 0;
+      let masterTapDownX = 0;
+      let masterTapDownY = 0;
+
+      window.addEventListener('pointerdown', (e) => {
+        masterTapDownTime = Date.now();
+        masterTapDownX = e.clientX;
+        masterTapDownY = e.clientY;
+      }, { capture: true, passive: true });
+
+      window.addEventListener('pointerup', (e) => {
+        const tapDuration = Date.now() - masterTapDownTime;
+        const tapDistance = Math.hypot(e.clientX - masterTapDownX, e.clientY - masterTapDownY);
+
+        if (tapDuration < 320 && tapDistance < 14) {
+          const isControl = e.target.closest && (
+            e.target.closest('.dock-app-slot') ||
+            e.target.closest('.app-icon-slot') ||
+            e.target.closest('.corner-round-notif-btn') ||
+            e.target.closest('.btn-act') ||
+            e.target.closest('.btn-dsm') ||
+            e.target.closest('.spatial-indicator-item') ||
+            e.target.closest('#homeBrowserTab') ||
+            e.target.closest('button') ||
+            e.target.closest('.polar-tile-block')
+          );
+
+          if (!isControl) {
+            const anyPanelOpen = railsOpen || drawerOpen || 
+              arcLeft.classList.contains('open') || 
+              arcRight.classList.contains('open') || 
+              notifModal.classList.contains('open');
+
+            if (anyPanelOpen) {
+              if (drawerOpen) dismissDrawerToHome(true);
+              if (railsOpen) closeBothRails();
+              closeArcLeft();
+              closeArcRight();
+              closeNotifModal();
+              try { if (navigator.vibrate) navigator.vibrate(10); } catch(err) {}
+              triggerIsland('ButterOS', 'Home Page', SVG_ICONS.clock);
+            }
+          }
+        }
+      }, { capture: true, passive: true });
+
+      // Home Browser Tab Click -> Open Butter Web
+      document.getElementById('homeBrowserTab').onclick = (e) => {
+        e.stopPropagation();
+        const tab = document.getElementById('homeBrowserTab');
+        tab.style.transform = 'scale(0.95)';
+        setTimeout(() => { tab.style.transform = ''; }, 160);
+        triggerIsland('Butter Web', 'Opening Web URL...', SVG_ICONS.browser);
+      };
+
+      // Permanent Dock Icons Click -> Open respective app with spring animation & Dynamic Island
+      document.querySelectorAll('.dock-app-slot').forEach(slot => {
+        slot.onclick = (e) => {
+          e.stopPropagation();
+          const appName = slot.getAttribute('title') || 'App';
+          const appKey = slot.getAttribute('data-app') || 'terminal';
+          slot.style.transform = 'scale(0.85)';
+          setTimeout(() => { slot.style.transform = ''; }, 160);
+          triggerIsland(appName, 'Opening...', SVG_ICONS[appKey] || SVG_ICONS.terminal);
+        };
+      });
+
+      // Launch with NO rails (starts on clean Home Page with browser tab & 4 dock icons)
+      closeBothRails();
+
+    })();
+  </script>
+</body>
+</html>
