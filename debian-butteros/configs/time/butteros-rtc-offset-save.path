@@ -1,0 +1,10 @@
+# ADD-ON: save the rtc offset whenever systemd-timesyncd gets a good NTP time
+[Unit]
+Description=ButterOS save RTC offset after NTP sync
+
+[Path]
+PathModified=/run/systemd/timesync/synchronized
+Unit=butteros-rtc-offset-save.service
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+# /etc/udev/rules.d/99-pocof1-touchscreen.rules
+# Force touchscreen classification on Xiaomi Poco F1 (SDM845 Beryllium)
+# Prevents libinput from dropping BTN_TOUCH as absolute mouse/tablet
+ACTION=="add|change", KERNEL=="event*", SUBSYSTEM=="input", ATTRS{name}=="*NVT-ts*|*nt36*|*Novatek*|*FTS-ts*|*ft8719*|*Focaltech*", \
+    ENV{ID_INPUT}="1", \
+    ENV{ID_INPUT_TOUCHSCREEN}="1", \
+    ENV{ID_INPUT_MOUSE}="", \
+    ENV{ID_INPUT_TABLET}="", \
+    ENV{ID_INPUT_TOUCHPAD}="", \
+    ENV{WL_OUTPUT}="DSI-1"
+
+# ADD-ON: stable /dev/input/touchscreen for lisgd (its default device; it exited at startup without it)
+ACTION=="add|change", KERNEL=="event*", SUBSYSTEM=="input", ATTRS{name}=="*NVT-ts*|*nt36*|*Novatek*|*FTS-ts*|*ft8719*|*Focaltech*", \
+    SYMLINK+="input/touchscreen"

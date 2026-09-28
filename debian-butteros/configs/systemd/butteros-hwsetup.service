@@ -1,0 +1,14 @@
+[Unit]
+Description=ButterOS first-boot hardware setup (modules, firmware helpers)
+After=local-fs.target systemd-udevd.service systemd-udev-trigger.service
+Before=NetworkManager.service ModemManager.service bluetooth.service
+ConditionPathExists=!/var/lib/butteros/hwsetup.done
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/butteros-hwsetup
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

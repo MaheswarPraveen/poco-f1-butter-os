@@ -1,0 +1,12 @@
+[Unit]
+Description=ButterOS USB serial console gadget
+After=local-fs.target systemd-modules-load.service sys-kernel-config.mount
+Before=serial-getty@ttyGS0.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/butteros-usb-console
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<labwc_config>
+  <!-- Full edge-to-edge mobile kiosk display without artificial letterboxing -->
+  <margin top="0" output="DSI-1" />
+
+  <!-- Kiosk Window Management: Force full-screen display without window borders or titlebars -->
+  <windowRules>
+    <windowRule identifier="*" serverDecoration="no">
+      <action name="ToggleMaximize" />
+    </windowRule>
+  </windowRules>
+
+  <!-- Touchscreen Output & Protocol Mapping:
+       CRITICAL: mapToOutput links touch to DSI-1 panel; mouseEmulation="no" disables
+       broken cursor emulation and delivers genuine wl_touch events to Chromium -->
+  <touch>
+    <mapToOutput>DSI-1</mapToOutput>
+    <mouseEmulation>no</mouseEmulation>
+  </touch>
+
+  <!-- Snapping & Placement -->
+  <snapping>
+    <range>0</range>
+  </snapping>
+</labwc_config>

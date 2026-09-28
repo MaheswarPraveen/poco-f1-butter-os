@@ -1,0 +1,10 @@
+# ADD-ON: save the rtc offset periodically so a crash or battery pull loses little
+[Unit]
+Description=ButterOS periodic RTC offset save
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=30min
+
+[Install]
+WantedBy=timers.target

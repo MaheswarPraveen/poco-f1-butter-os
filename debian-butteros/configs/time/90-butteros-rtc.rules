@@ -1,0 +1,3 @@
+# ADD-ON: when the PMIC RTC registers (rtc_pm8xxx is a module, so this can be late in boot
+# and it resets the clock to ~1970), restore the real time from the saved offset.
+ACTION=="add", SUBSYSTEM=="rtc", KERNEL=="rtc0", TAG+="systemd", ENV{SYSTEMD_WANTS}+="butteros-rtc-offset.service"

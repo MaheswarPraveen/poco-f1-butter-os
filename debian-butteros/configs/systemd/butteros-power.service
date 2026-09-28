@@ -1,0 +1,13 @@
+[Unit]
+Description=ButterOS CPU Frequency & Thermal Governor
+DefaultDependencies=no
+After=sysinit.target local-fs.target
+Before=basic.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c "for g in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do [ -f \$g ] && echo schedutil > \$g; done; for c in 4 5 6 7; do [ -f /sys/devices/system/cpu/cpu\$c/cpufreq/scaling_max_freq ] && echo 2208000 > /sys/devices/system/cpu/cpu\$c/cpufreq/scaling_max_freq; done"
+
+[Install]
+WantedBy=basic.target

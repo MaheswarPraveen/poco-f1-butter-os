@@ -1,0 +1,22 @@
+# Xiaomi Pocophone F1 (beryllium) Hardware Udev Rules for ButterOS
+
+# Adreno 630 DRM/KMS Rendering Node Permissions
+KERNEL=="card[0-9]*", SUBSYSTEM=="drm", GROUP="video", MODE="0660"
+KERNEL=="renderD[0-9]*", SUBSYSTEM=="drm", GROUP="render", MODE="0666"
+
+# FocalTech / Synaptics Touchscreen Event Nodes
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="*focaltech*", GROUP="input", MODE="0660", ENV{ID_INPUT_TOUCHSCREEN}="1"
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="*synaptics*", GROUP="input", MODE="0660", ENV{ID_INPUT_TOUCHSCREEN}="1"
+
+# Qualcomm PM8998 LRA Haptic Motor
+SUBSYSTEM=="leds", KERNEL=="vibrator", ACTION=="add", RUN+="/bin/chmod 0666 /sys/class/leds/vibrator/duration", RUN+="/bin/chmod 0666 /sys/class/leds/vibrator/activate"
+
+# Tianma / EBBG Display Panel Backlight
+SUBSYSTEM=="backlight", ACTION=="add", RUN+="/bin/chmod 0666 /sys/class/backlight/%k/brightness"
+
+# Qualcomm Power Supply & Battery Fuel Gauge
+SUBSYSTEM=="power_supply", ACTION=="add", RUN+="/bin/chmod 0664 /sys/class/power_supply/%k/status", RUN+="/bin/chmod 0664 /sys/class/power_supply/%k/capacity"
+
+# Qualcomm IPC Router & Modem PIL for LTE Data/Calls
+KERNEL=="qrtr-*", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="rpmsg", GROUP="dialout", MODE="0660"

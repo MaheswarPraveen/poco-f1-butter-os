@@ -1,0 +1,33 @@
+[Unit]
+Description=ButterOS Mobile Shell on Wayland (Labwc Kiosk)
+After=systemd-user-sessions.service plymouth-quit-wait.service udev.service
+Wants=systemd-udev-settle.service
+Conflicts=getty@tty1.service getty@tty7.service
+
+[Service]
+Type=simple
+User=butter
+WorkingDirectory=/home/butter
+PAMName=login
+Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_CURRENT_DESKTOP=ButterOS
+Environment=WLR_LIBINPUT_NO_CONFIG=1
+Environment=WLR_BACKENDS=drm,libinput
+Environment=WLR_RENDERER=gles2
+Environment=MESA_LOADER_DRIVER_OVERRIDE=freedreno
+Environment=MOZ_ENABLE_WAYLAND=1
+Environment=QT_QPA_PLATFORM=wayland
+ExecStart=/usr/bin/labwc -s /usr/local/bin/butteros-session
+Restart=always
+RestartSec=1s
+
+# Sandboxing & Capabilities
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+
+[Install]
+WantedBy=graphical.target multi-user.target

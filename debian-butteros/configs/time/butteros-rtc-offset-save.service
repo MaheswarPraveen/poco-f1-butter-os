@@ -1,0 +1,7 @@
+# ADD-ON: store the current rtc offset (run by the timer and after each NTP sync)
+[Unit]
+Description=ButterOS save software RTC offset
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/butteros-rtc-offset save

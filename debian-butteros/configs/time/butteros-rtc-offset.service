@@ -1,0 +1,16 @@
+# ADD-ON: restore the clock from rtc + saved offset once rtc0 registers; save it at shutdown.
+# Started by 90-butteros-rtc.rules (rtc0 "add", replayed by udev coldplug), so it runs
+# after the kernel's hctosys has reset the clock to the raw RTC value.
+[Unit]
+Description=ButterOS software RTC offset (restore at boot, save at shutdown)
+DefaultDependencies=no
+After=local-fs.target
+Before=time-set.target shutdown.target
+Wants=time-set.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/butteros-rtc-offset restore
+ExecStop=/usr/local/bin/butteros-rtc-offset save
