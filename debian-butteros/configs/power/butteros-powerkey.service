@@ -1,0 +1,12 @@
+# ADD-ON: short power-key press toggles the screen (see butteros-powerkey.py)
+[Unit]
+Description=ButterOS power key (screen on/off)
+After=systemd-logind.service
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/butteros-powerkey
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

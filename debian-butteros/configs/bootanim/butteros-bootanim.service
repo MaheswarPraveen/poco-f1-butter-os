@@ -1,0 +1,18 @@
+# ADD-ON: play the boot animation once per boot, as early as possible, before the kiosk
+# shell takes the display. DefaultDependencies=no so it doesn't wait for the rest of
+# the system (root is already mounted by the initramfs).
+[Unit]
+Description=ButterOS boot animation
+DefaultDependencies=no
+After=systemd-udevd.service systemd-journald.socket
+Before=butteros-shell.service getty@tty1.service
+ConditionPathExists=/usr/share/butteros/bootanimation.mp4
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/butteros-bootanim
+TimeoutStartSec=30
+
+[Install]
+WantedBy=sysinit.target

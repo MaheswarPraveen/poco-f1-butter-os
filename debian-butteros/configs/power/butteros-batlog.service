@@ -1,0 +1,13 @@
+# ADD-ON: battery logger (charging / shutdown diagnostics) -> /var/log/butteros-battery.csv
+[Unit]
+Description=ButterOS battery logger
+After=local-fs.target
+
+[Service]
+ExecStart=/bin/sh /usr/local/bin/butteros-batlog
+Restart=always
+RestartSec=5
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+# ADD-ON: stop the sensor DSP (SLPI) after it boots. With fastrpc blacklisted (kernel 7.1
+# regression: qcom_scm_assign_mem -22), its sensor process can never initialise, the DSP
+# watchdog fires ("USER-PD DOG detects stalled initialization") and the kernel restarts it
+# forever (72 crashes in one session). Nothing uses sensors yet. Remove when sensors are added.
+[Unit]
+Description=ButterOS stop crash-looping sensor DSP (SLPI)
+After=sysinit.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'for i in $(seq 60); do for r in /sys/class/remoteproc/remoteproc*; do if [ "$(cat $r/name)" = slpi ]; then [ "$(cat $r/state)" = running ] && { echo stop > $r/state; echo "slpi stopped"; exit 0; }; fi; done; sleep 1; done; echo "slpi not running"'
+
+[Install]
+WantedBy=multi-user.target

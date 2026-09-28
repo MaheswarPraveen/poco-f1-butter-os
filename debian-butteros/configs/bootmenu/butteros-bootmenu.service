@@ -1,0 +1,17 @@
+# ADD-ON: GRUB-style boot menu (ButterOS / Android) AFTER the boot animation, before the shell,
+# drawn over the held logo. 8 s default, 30 s hard cap, errors -> ButterOS.
+[Unit]
+Description=ButterOS boot menu (ButterOS / Android)
+DefaultDependencies=no
+After=systemd-udevd.service systemd-udev-trigger.service butteros-bootanim.service
+Before=butteros-shell.service getty@tty1.service
+ConditionPathExists=/usr/share/butteros/boot-images/android-boot.img
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/python3 /usr/local/bin/butteros-bootmenu
+TimeoutStartSec=90
+
+[Install]
+WantedBy=sysinit.target
