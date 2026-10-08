@@ -1,0 +1,48 @@
+# ==============================================================================
+# ButterOS - Poco F1 (beryllium) .gitignore
+# ==============================================================================
+
+# Compiled binaries, firmware dumps & raw partition images
+*.img
+*.iso
+*.raw
+*.bin
+*.mbn
+images/*.img
+
+# Large OS build artifacts & archives (>100MB violates GitHub limits)
+debian-butteros/build/*.tar.gz
+debian-butteros/build/*.zip
+debian-butteros/build/*.img
+debian-butteros/build/boot_test/
+
+# Android launcher artifacts
+android-launcher/*.apk
+android-launcher/*.idsig
+android-launcher/classes.dex
+android-launcher/compiled_res.zip
+android-launcher/obj/
+android-launcher/debug.keystore
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Serial & Debug run logs
+logs/*.log
+*.log
+
+# OS & Editor generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+.vscode/
+.claude/
+.offgit/
+logs/
+.env
+.env.*
+*.env
+*.pyc
